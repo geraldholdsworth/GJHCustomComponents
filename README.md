@@ -11,10 +11,10 @@ Utilising these means not having to install packages and recompile Lazarus.<br>
 <br>
 <H2>Usage</H2>
 <H3>TGJHTickBox and TGJHRadioBox</H3>
-<B>Methods</B>
+<B>Methods</B><br>
 <I>Create(AOwner)</I><br>
 Creates the control. Pass the owner control as the only parameter.<br><br>
-<B>Events</B>
+<B>Events</B><br>
 <I>OnChange</I><br>
 Fires when the control changes state.<br><br>
 <B>Properties</B><br>
@@ -28,10 +28,10 @@ Only fire the OnChange event when clicked on. Default: False.<br>
 <I>Ticked</I>: Boolean<br>
 Ticked or not. Default: False.<br><br>
 <H3>TGJHSlider</H3>
-<B>Methods</B>
+<B>Methods</B><br>
 <I>Create(AOwner)</I><br>
 Creates the control. Pass the owner control as the only parameter.<br><br>
-<B>Events</B>
+<B>Events</B><br>
 <I>OnChange</I><br>
 Fires when the position changes.<br><br>
 <B>Properties</B><br>
@@ -58,7 +58,7 @@ Width or Height of the slider. Default: 16.<br>
 Step size between positions. Default: 1.<br><br>
 <H3>TGJHRegistry</H3>
 This is not a visual control.<br>
-<B>Methods</B>
+<B>Methods</B><br>
 <I>Create(LKey: String)</I><br>
 Creates the instance. Pass the registry key as the only parameter.<br>
 <I>DeleteKey(LKey: String)</I><br>
