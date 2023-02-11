@@ -25,9 +25,14 @@ Boston, MA 02110-1335, USA.
 interface
 
 uses
- Classes, SysUtils, Graphics, ExtCtrls, Controls, Registry;
+ Classes, SysUtils, Graphics, ExtCtrls, Controls, Registry, Math, StrUtils;
 
 {$M+}
+
+//Global constants
+const
+ csHorizontal = 0;
+ csVertical   = 1;
 
 //RISC OS style tick boxes - declarations ++++++++++++++++++++++++++++++++++++++
 type
@@ -258,7 +263,8 @@ type TGJHSlider = class(TGraphicControl)
   FPosition,
   FMax,
   FMin,
-  FSliderWidth,
+  FSliderSize,
+  FOrient,
   FStep       : Integer;
   FOnChange   : TNotifyEvent;
   FFont       : TFont;
@@ -268,10 +274,11 @@ type TGJHSlider = class(TGraphicControl)
   procedure SetColour(const LColour: Cardinal);
   procedure SetMax(const LMax: Integer);
   procedure SetMin(const LMin: Integer);
-  procedure SetSliderWidth(const LSliderWidth: Integer);
+  procedure SetSliderSize(const LSliderSize: Integer);
   procedure SetShowValue(const LShowValue: Boolean);
   procedure SetHexValue(const LHexValue: Boolean);
-  function GetSliderHeight: Integer;
+  procedure SetOrient(const LOrient: Integer);
+  function GetSliderEnd: Integer;
   function GetValue: String;
   function GetSliderStart: Integer;
   procedure FDown(Sender: TObject; {%H-}Button: TMouseButton;
@@ -279,6 +286,8 @@ type TGJHSlider = class(TGraphicControl)
   procedure FMove(Sender: TObject; {%H-}Shift: TShiftState;  {%H-}X,Y: Integer);
   procedure FUp(Sender: TObject; {%H-}Button: TMouseButton;
                               {%H-}Shift: TShiftState; {%H-}X, {%H-}Y: Integer);
+ const
+  FGap = 4;
  protected
   procedure Paint; override;
  published
@@ -287,13 +296,14 @@ type TGJHSlider = class(TGraphicControl)
   property Max        : Integer      read FMax         write SetMax         default 100;
   property Min        : Integer      read FMin         write SetMin         default 0;
   property Colour     : Cardinal     read FColour      write SetColour      default clRed;
-  property SliderWidth: Integer      read FSliderWidth write SetSliderWidth default 16;
+  property SliderSize : Integer      read FSliderSize  write SetSliderSize  default 16;
   property OnChange   : TNotifyEvent read FOnChange    write FOnChange;
   property Font       : TFont        read FFont        write FFont;
   property Caption    : string       read FCaption     write FCaption;
   property ShowValue  : Boolean      read FShowValue   write SetShowValue   default False;
   property Step       : Integer      read FStep        write SetStep        default 1;
   property HexValue   : Boolean      read FHexValue    write SetHexValue    default False;
+  property Orientation: Integer      read FOrient      write SetOrient      default csVertical;
  public
   destructor Destroy; override;
 end;
@@ -540,6 +550,12 @@ begin
  FMax:=100;
  FPosition:=0;
  FColour:=$0000FF;
+ FSliderSize:=16;
+ FCaption:='';
+ FShowValue:=False;
+ FStep:=1;
+ FHexValue:=False;
+ FOrient:=csVertical;
  //Create the font, and set it to a default
  FFont:=TFont.Create;
  FFont.Name:='default';
@@ -551,12 +567,6 @@ begin
  FFont.Pitch:=fpDefault;
  FFont.Quality:=fqDefault;
  FFont.Style:=[];
- //More default values
- FSliderWidth:=16;
- FCaption:='';
- FShowValue:=False;
- FStep:=1;
- FHexValue:=False;
  //We need to react to the MouseDown, MouseMove and MouseUp events
  OnMouseDown:=@FDown;
  OnMouseMove:=@FMove;
@@ -581,13 +591,20 @@ var
  LTX,LX,LH : Integer;
  LCaption  : String;
 begin
- //Ensure that the slider width is not bigger than the control
- if FSliderWidth>Width then FSliderWidth:=Width;
  //Work out the position (centre of control)
- LX:=(Width-FSliderWidth)div 2;
+ if FOrient=csVertical then LX:=(Width-FSliderSize)div 2
+ else LX:=(Height-FSliderSize)div 2;
  //Work out where the top and bottom of the slider are
- LY:=GetSliderStart;
- LH:=GetSliderHeight;
+ if FOrient=csVertical then
+ begin
+  LY:=GetSliderStart;
+  LH:=GetSliderEnd;
+ end
+ else
+ begin
+  LH:=GetSliderStart;
+  LY:=GetSliderEnd;
+ end;
  //Are we displaying the value?
  LCaption:=GetValue;
  //If so, then paint it
@@ -595,15 +612,31 @@ begin
  if LCaption<>'' then
  begin
   Canvas.Font:=FFont;
-  LTX:=(Width-Canvas.GetTextWidth(LCaption))div 2;
-  Canvas.TextOut(LTX,LH,LCaption);
+  if FOrient=csVertical then
+  begin
+   LTX:=(Width-Canvas.GetTextWidth(LCaption))div 2;
+   Canvas.TextOut(LTX,LH,LCaption);
+  end
+  else
+  begin
+   LTX:=(Height-Canvas.GetTextHeight(LCaption))div 2;
+   Canvas.TextOut(0,LTX,LCaption);
+  end;
  end;
  //Are we displaying any caption?
  if FCaption<>'' then
  begin
   Canvas.Font:=FFont;
-  LTX:=(Width-Canvas.GetTextWidth(FCaption))div 2;
-  Canvas.TextOut(LTX,0,FCaption);
+  if FOrient=csVertical then
+  begin
+   LTX:=(Width-Canvas.GetTextWidth(FCaption))div 2;
+   Canvas.TextOut(LTX,0,FCaption);
+  end
+  else
+  begin
+   LTX:=(Height-Canvas.GetTextHeight(FCaption))div 2;
+   Canvas.TextOut(LY+FGap,LTX,FCaption);
+  end;
  end;
  //Work out where the filler starts and ends
  LPosition:=LH-Round((FPosition/(FMax-FMin))*(LH-LY));
@@ -611,12 +644,18 @@ begin
  Canvas.Brush.Color:=FColour;
  Canvas.Brush.Style:=bsSolid;
  Canvas.Pen.Style:=psClear;
- Canvas.Rectangle(LX,LPosition,LX+FSliderWidth,LH);
+ if FOrient=csVertical then
+  Canvas.Rectangle(LX,LPosition,LX+FSliderSize,LH)
+ else
+  Canvas.Rectangle(LPosition,LX,LH,LX+FSliderSize);
  //Draw the outline
  Canvas.Pen.Color:=$000000;
  Canvas.Pen.Style:=psSolid;
  Canvas.Brush.Style:=bsClear;
- Canvas.Rectangle(LX,LY,LX+FSliderWidth,LH);
+ if FOrient=csVertical then
+  Canvas.Rectangle(LX,LY,LX+FSliderSize,LH)
+ else
+  Canvas.Rectangle(LH,LX,LY,LX+FSliderSize);
 end;
 
 {-------------------------------------------------------------------------------
@@ -678,10 +717,13 @@ end;
 {-------------------------------------------------------------------------------
 The slider width has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetSliderWidth(const LSliderWidth: Integer);
+procedure TGJHSlider.SetSliderSize(const LSliderSize: Integer);
 begin
  //Ensure it is valid
- if LSliderWidth<=Width then FSliderWidth:=LSliderWidth;
+ if FOrient=csVertical then
+  if LSliderSize<=Width then FSliderSize:=LSliderSize;
+ if FOrient=csHorizontal then
+  if LSliderSize<=Height then FSliderSize:=LSliderSize;
  Invalidate; //Force a redraw
 end;
 
@@ -700,6 +742,15 @@ The show as Hex has been toggled
 procedure TGJHSlider.SetHexValue(const LHexValue: Boolean);
 begin
  FHexValue:=LHexValue;
+ Invalidate; //Force a redraw
+end;
+
+{-------------------------------------------------------------------------------
+Orientation has changed
+-------------------------------------------------------------------------------}
+procedure TGJHSlider.SetOrient(const LOrient: Integer);
+begin
+ FOrient:=LOrient;
  Invalidate; //Force a redraw
 end;
 
@@ -728,11 +779,12 @@ begin
  if FMouseIsDown then
  begin
   //Work out position
-  LH:=GetSliderHeight;
+  LH:=GetSliderEnd;
   LY:=GetSliderStart;
-  if Y>=LY then
+  if((FOrient=csVertical)and(Y>=LY)and(Y<=LH))
+  or((FOrient=csHorizontal)and(X>=LY)and(X<=LH))then
   begin
-   Lposition:=LH-Y;
+   if FOrient=csVertical then Lposition:=LH-Y else Lposition:=X-LY;
    Lpercent:=Lposition/(LH-LY);
    SetPosition(Round((FMax-FMin)*Lpercent)+FMin);
    //Fire the OnChange event
@@ -754,19 +806,22 @@ end;
 {-------------------------------------------------------------------------------
 Get the height of the slider, taking into account the text
 -------------------------------------------------------------------------------}
-function TGJHSlider.GetSliderHeight: Integer;
+function TGJHSlider.GetSliderEnd: Integer;
 var
  LCaption : String;
 begin
  //Get the value
  LCaption:=GetValue;
+ if FOrient=csVertical then Result:=Height else Result:=Width;
  //If it is getting printed
- if LCaption='' then Result:=Height
- else
+ if LCaption<>'' then
  begin
   //Otherwise, find out how high it will be
   Canvas.Font:=FFont;
-  Result:=Height-Canvas.GetTextHeight(LCaption);
+  if FOrient=csVertical then
+   Result:=Height-Canvas.GetTextHeight(LCaption)
+  else
+   Result:=Width-(Canvas.GetTextWidth(FCaption)+FGap);
  end;
 end;
 
@@ -777,29 +832,42 @@ function TGJHSlider.GetValue: String;
 var
  L: Byte;
 begin
- //For displaying as Hex, work out how many digits are required
- L:=1;
- while IntToHex(FMax,L)[1]<>'0' do inc(L);
  Result:='';
  //If we are showing a value
  if FShowValue then
   if FHexValue then //And it is in hex
+  begin 
+   //Work out how many digits are required
+   L:=1;
+   while IntToHex(FMax,L)[1]<>'0' do inc(L);
    Result:='0x'+IntToHex(FPosition,L-1)
+  end
   else //Otherwise in decimal
-   Result:=IntToStr(FPosition);
+  begin
+   //Pad to how much?
+   L:=Length(IntToStr(FMax));
+   Result:=PadLeft(IntToStr(FPosition),L);
+  end;
 end;
 
 {-------------------------------------------------------------------------------
 Work out where the top of the slider is
 -------------------------------------------------------------------------------}
 function TGJHSlider.GetSliderStart: Integer;
+var
+ LCaption : String;
 begin
+ //Get the value
+ LCaption:=GetValue;
  //This depends on whether we have text to print or not
  if FCaption='' then Result:=0
  else
  begin
   Canvas.Font:=FFont;
-  Result:=Canvas.GetTextHeight(FCaption);
+  if FOrient=csVertical then
+   Result:=Canvas.GetTextHeight(FCaption)
+  else
+   Result:=Ceil((Canvas.GetTextWidth(LCaption)+FGap)/15)*15;
  end;
 end;
 

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="12"/>
+    <ManyBuildModesSelection Value="Windows"/>
+    <BuildModes Active="Default"/>
+    <Units Count="7">
+      <Unit0>
+        <Filename Value="GJHComponents.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="2"/>
+        <CursorPos X="17" Y="10"/>
+        <UsageCount Value="215"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="MainUnit.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="MainForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
+        <CursorPos X="14"/>
+        <UsageCount Value="215"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="unit2.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="SidePanel"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Unit2"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="16" Y="58"/>
+        <UsageCount Value="231"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="838"/>
+        <CursorPos X="12" Y="849"/>
+        <UsageCount Value="62"/>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="/Applications/Lazarus/lcl/controls.pp"/>
+        <UnitName Value="Controls"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1690"/>
+        <CursorPos X="14" Y="1739"/>
+        <UsageCount Value="7"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="/Applications/Lazarus/lcl/stdctrls.pp"/>
+        <UnitName Value="StdCtrls"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1488"/>
+        <CursorPos X="16" Y="1347"/>
+        <UsageCount Value="7"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="/Applications/Lazarus/lcl/include/customcheckbox.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="248"/>
+        <CursorPos X="3" Y="254"/>
+        <UsageCount Value="7"/>
+      </Unit6>
+    </Units>
+    <JumpHistory Count="24" HistoryIndex="22">
+      <Position1>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="525" Column="30" TopLine="503"/>
+      </Position1>
+      <Position2>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="653" Column="30" TopLine="631"/>
+      </Position2>
+      <Position3>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="664" Column="30" TopLine="642"/>
+      </Position3>
+      <Position4>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="675" Column="30" TopLine="653"/>
+      </Position4>
+      <Position5>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="685" Column="30" TopLine="663"/>
+      </Position5>
+      <Position6>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="694" Column="30" TopLine="672"/>
+      </Position6>
+      <Position7>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="703" Column="30" TopLine="87"/>
+      </Position7>
+      <Position8>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="279" Column="47" TopLine="272"/>
+      </Position8>
+      <Position9>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="567" Column="23" TopLine="543"/>
+      </Position9>
+      <Position10>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="692" Column="41" TopLine="670"/>
+      </Position10>
+      <Position11>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="689" Column="36" TopLine="670"/>
+      </Position11>
+      <Position12>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="277" Column="56" TopLine="254"/>
+      </Position12>
+      <Position13>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="272" Column="51" TopLine="255"/>
+      </Position13>
+      <Position14>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="689" Column="64" TopLine="667"/>
+      </Position14>
+      <Position15>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="277" Column="19" TopLine="255"/>
+      </Position15>
+      <Position16>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="771" Column="22" TopLine="767"/>
+      </Position16>
+      <Position17>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="281" Column="24" TopLine="275"/>
+      </Position17>
+      <Position18>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="598" Column="18" TopLine="587"/>
+      </Position18>
+      <Position19>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="863" Column="12" TopLine="851"/>
+      </Position19>
+      <Position20>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="783" Column="48" TopLine="775"/>
+      </Position20>
+      <Position21>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="822" Column="50" TopLine="805"/>
+      </Position21>
+      <Position22>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="844" Column="18" TopLine="831"/>
+      </Position22>
+      <Position23>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="849" Column="12" TopLine="837"/>
+      </Position23>
+      <Position24>
+        <Filename Value="GJHCustomComponents.pas"/>
+        <Caret Line="28" Column="75" TopLine="6"/>
+      </Position24>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+  <Debugging>
+    <Watches>
+      <Item>
+        <Expression Value="Lposition"/>
+      </Item>
+      <Item>
+        <Expression Value="Lpercent"/>
+      </Item>
+      <Item>
+        <Expression Value="LH"/>
+      </Item>
+      <Item>
+        <Expression Value="LY"/>
+      </Item>
+      <Item>
+        <Expression Value="X"/>
+      </Item>
+    </Watches>
+  </Debugging>
+</CONFIG>
