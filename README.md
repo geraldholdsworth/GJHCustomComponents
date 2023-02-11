@@ -18,7 +18,7 @@ Creates the control. Pass the owner control as the only parameter.<br><br>
 <I>OnChange</I><br>
 Fires when the control changes state.<br><br>
 <B>Properties</B><br>
-In addtion to Top, Left, Width, Height, Visible, Parent and Name.<br>
+In addtion to what is inherited from TGraphicControl, including Top, Left, Width, Height, Visible, Parent, Name and Font.<br>
 <I>Caption</I>: String<br>
 Text displayed next to the box.<br>
 <I>Colour</I>: TColor<br>
@@ -35,13 +35,11 @@ Creates the control. Pass the owner control as the only parameter.<br><br>
 <I>OnChange</I><br>
 Fires when the position changes.<br><br>
 <B>Properties</B><br>
-In addtion to Top, Left, Width, Height, Visible, Parent and Name.<br>
+In addtion to what is inherited from TGraphicControl, including Top, Left, Width, Height, Visible, Parent, Name and Font.<br>
 <I>Caption</I>: String<br>
 Text displayed top or right of the slider.<br>
 <I>Colour</I>: TColor<br>
 Colour of the slider. Default: clRed.<br>
-<I>Font</I>: TFont<br>
-Font to use when printing the text.<br>
 <I>HexValue</I>: Boolean<br>
 Display the position as hex. Default: False.<br>
 <I>Max</I>: Integer<br>
