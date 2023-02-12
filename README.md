@@ -18,7 +18,7 @@ Creates the control. Pass the owner control as the only parameter.<br><br>
 <I>OnChange</I><br>
 Fires when the control changes state.<br><br>
 <B>Properties</B><br>
-In addtion to what is inherited from TGraphicControl, including Top, Left, Width, Height, Visible, Parent, Name and Font.<br>
+In addtion to what is inherited from TGraphicControl, including Top, Left, Visible, Parent, Name and Font.<br>
 <I>Caption</I>: String<br>
 Text displayed next to the box.<br>
 <I>Colour</I>: TColor<br>
@@ -40,6 +40,10 @@ In addtion to what is inherited from TGraphicControl, including Top, Left, Width
 Text displayed top or right of the slider.<br>
 <I>Colour</I>: TColor<br>
 Colour of the slider. Default: clRed.<br>
+<I>FillSlider</I>: Boolean<br>
+Whether to fill the slider or just to the position. Default: False.<br>
+<I>Gradient</I>: Boolean<br>
+Whether to fade the colour to black at lowest position or a solid colour. Default: False.<br>
 <I>HexValue</I>: Boolean<br>
 Display the position as hex. Default: False.<br>
 <I>Max</I>: Integer<br>
@@ -48,6 +52,8 @@ Maximum the position can be. Default: 100.<br>
 Minimum the position can be. Default: 0.<br>
 <I>Orientation</I>: Integer<br>
 Orientation of the slider - csVertical or csHorizontal. Default: csVertical.<br>
+<I>Pointers</I>: Boolean<br>
+Whether to show pointers either side of the slider. Default: True.<br>
 <I>Position</I>: Integer<br>
 Position of the slider (i.e., the value). Default: 0.<br>
 <I>ShowValue</I>: Boolean<br>

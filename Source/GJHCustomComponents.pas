@@ -53,12 +53,15 @@ type
   procedure Paint; override;
   procedure Click; override;
  published
+  //Methods
   constructor Create(AOwner: TComponent); override;
-  property Caption:  String       read FCaption   write SetWidth;
-  property Ticked:   Boolean      read FTicked    write SetTicked  default False;
+  //Events
   property OnChange: TNotifyEvent read FOnChange  write FOnChange;
+  //Properties
+  property Caption:  String       read FCaption   write SetWidth;
   property Colour:   TColor       read FColour    write FColour    default clNone;
   property OnlyMouse:Boolean      read FOnlyMouse write FOnlyMouse default False;
+  property Ticked:   Boolean      read FTicked    write SetTicked  default False;
  public
   destructor Destroy; override;
  end;
@@ -256,54 +259,138 @@ end;
 //Coloured Slider - declarations +++++++++++++++++++++++++++++++++++++++++++++++
 type TGJHSlider = class(TGraphicControl)
  private
-  FColour     : Cardinal;
+  FColour     : TColor;
   FMouseIsDown,
   FShowValue,
-  FHexValue   : Boolean;
+  FHexValue,
+  FGradient,
+  FPointers,
+  FFillSlider : Boolean;
   FPosition,
   FMax,
   FMin,
-  FSliderSize,
   FOrient,
   FStep       : Integer;
   FOnChange   : TNotifyEvent;
-  FFont       : TFont;
   FCaption    : String;
   procedure SetPosition(const LPosition: Integer);
   procedure SetStep(const LStep: Integer);
-  procedure SetColour(const LColour: Cardinal);
+  procedure SetColour(const LColour: TColor);
   procedure SetMax(const LMax: Integer);
   procedure SetMin(const LMin: Integer);
-  procedure SetSliderSize(const LSliderSize: Integer);
   procedure SetShowValue(const LShowValue: Boolean);
   procedure SetHexValue(const LHexValue: Boolean);
   procedure SetOrient(const LOrient: Integer);
+  procedure SetGradient(const LGradient: Boolean);
+  procedure SetPointers(const LPointers: Boolean);
+  procedure SetFillSlider(const LFillSlider: Boolean);
   function GetSliderEnd: Integer;
   function GetValue: String;
   function GetSliderStart: Integer;
   procedure FDown(Sender: TObject; {%H-}Button: TMouseButton;
                               {%H-}Shift: TShiftState; {%H-}X, {%H-}Y: Integer);
-  procedure FMove(Sender: TObject; {%H-}Shift: TShiftState;  {%H-}X,Y: Integer);
+  procedure FMove(Sender: TObject; {%H-}Shift: TShiftState;  X,Y: Integer);
   procedure FUp(Sender: TObject; {%H-}Button: TMouseButton;
                               {%H-}Shift: TShiftState; {%H-}X, {%H-}Y: Integer);
  const
+  FPointerLeft: array[0..333] of Byte = (
+$89,$50,$4E,$47,$0D,$0A,$1A,$0A,$00,$00,$00,$0D,$49,$48,$44,$52,$00,$00,$00,$20,
+$00,$00,$00,$20,$08,$02,$00,$00,$00,$FC,$18,$ED,$A3,$00,$00,$00,$06,$74,$52,$4E,
+$53,$00,$00,$00,$00,$00,$00,$6E,$A6,$07,$91,$00,$00,$01,$03,$49,$44,$41,$54,$78,
+$9C,$B5,$D6,$A1,$0E,$83,$30,$14,$85,$E1,$3D,$76,$5F,$03,$39,$81,$01,$87,$C5,$22,
+$10,$58,$24,$06,$41,$08,$82,$10,$0C,$21,$88,$09,$42,$B6,$1B,$96,$35,$0C,$6E,$0B,
+$2D,$A7,$47,$56,$FC,$9F,$81,$C2,$E3,$E1,$6C,$6D,$DB,$E6,$79,$EE,$2A,$FD,$5A,$27,
+$84,$70,$92,$7E,$AF,$0B,$C3,$10,$09,$6C,$D3,$B4,$A2,$28,$C4,$3A,$7C,$9A,$B6,$2C,
+$8B,$F8,$0D,$9C,$A6,$4D,$D3,$D4,$34,$CD,$5D,$40,$93,$AE,$D6,$D9,$03,$6C,$9A,$4E,
+$64,$DA,$1E,$50,$A5,$E9,$BC,$3A,$CC,$0C,$30,$4A,$9B,$01,$6C,$7A,$9E,$E7,$AE,$EB,
+$54,$E9,$AB,$80,$2A,$DD,$F7,$BD,$3E,$7D,$0E,$B0,$69,$7A,$B4,$2F,$A6,$75,$80,$2A,
+$3D,$0C,$43,$5D,$D7,$D7,$EB,$0C,$00,$4C,$EF,$01,$36,$4D,$1B,$C7,$D1,$2E,$BD,$07,
+$E8,$CA,$8E,$A2,$E8,$F9,$3F,$DF,$F7,$93,$24,$29,$CB,$12,$00,$7C,$A7,$62,$D2,$34,
+$C5,$00,$1A,$26,$08,$82,$2C,$CB,$30,$00,$90,$39,$7F,$D1,$58,$86,$4E,$E8,$1C,$03,
+$DC,$64,$CC,$2E,$3B,$0B,$C6,$E6,$BA,$66,$99,$38,$8E,$E9,$F3,$8B,$01,$8C,$18,$7B,
+$40,$C3,$6C,$DF,$CD,$BB,$80,$8A,$91,$57,$00,$06,$D0,$30,$48,$80,$65,$A4,$01,$03,
+$8E,$8C,$E7,$79,$78,$60,$C7,$B8,$02,$24,$43,$FF,$BF,$1F,$D5,$74,$FE,$49,$A5,$E3,
+$08,$9D,$00,$00,$00,$00,$49,$45,$4E,$44,$AE,$42,$60,$82);
+  FPointerDown: array[0..372] of Byte = (
+$89,$50,$4E,$47,$0D,$0A,$1A,$0A,$00,$00,$00,$0D,$49,$48,$44,$52,$00,$00,$00,$20,
+$00,$00,$00,$20,$08,$02,$00,$00,$00,$FC,$18,$ED,$A3,$00,$00,$00,$06,$74,$52,$4E,
+$53,$00,$00,$00,$00,$00,$00,$6E,$A6,$07,$91,$00,$00,$01,$2A,$49,$44,$41,$54,$78,
+$9C,$B5,$95,$B1,$0A,$83,$30,$14,$45,$FD,$EC,$4C,$6E,$FA,$01,$7E,$80,$9B,$93,$B8,
+$8B,$88,$0A,$22,$28,$88,$E0,$20,$8A,$48,$47,$FF,$41,$41,$DA,$47,$5F,$6B,$DB,$84,
+$DA,$C6,$BC,$9C,$29,$D3,$CD,$39,$83,$C6,$98,$E7,$79,$DB,$B6,$AB,$06,$60,$B6,$AA,
+$2A,$A3,$EB,$BA,$2C,$CB,$96,$65,$A1,$5D,$07,$6F,$DB,$B6,$8B,$A2,$30,$80,$3C,$CF,
+$A3,$28,$EA,$FB,$7E,$5D,$57,$F5,$69,$70,$0D,$82,$80,$31,$E6,$38,$8E,$81,$40,$44,
+$74,$27,$8E,$E3,$69,$9A,$2E,$0A,$B4,$6D,$6B,$9A,$26,$BB,$F3,$D0,$47,$30,$02,$A8,
+$EB,$5A,$E5,$02,$D7,$75,$71,$FD,$A5,$4F,$18,$01,$FA,$EC,$C9,$87,$3E,$55,$C4,$57,
+$7D,$2E,$02,$18,$C7,$91,$58,$9F,$8B,$28,$CB,$52,$F6,$02,$B0,$3E,$D2,$57,$8C,$00,
+$E5,$DF,$FA,$2A,$11,$7F,$E9,$8B,$11,$F0,$E9,$11,$EB,$73,$11,$70,$20,$D6,$17,$23,
+$E0,$7C,$BC,$9E,$24,$89,$9C,$BE,$6C,$84,$65,$59,$72,$FA,$52,$11,$61,$18,$9E,$D1,
+$FF,$3F,$E2,$A4,$BE,$18,$01,$5F,$29,$B1,$3E,$17,$91,$A6,$29,$B7,$3E,$0C,$C3,$FE,
+$5B,$3E,$A3,$FF,$33,$C2,$F7,$7D,$55,$FD,$83,$08,$1A,$7D,$31,$A2,$69,$1A,$62,$7D,
+$2E,$02,$DF,$22,$4A,$7D,$31,$02,$DE,$22,$CF,$F3,$28,$F5,$91,$F7,$88,$7D,$9D,$46,
+$1F,$79,$8F,$A0,$D7,$47,$F6,$08,$7A,$7D,$64,$8F,$D0,$A2,$8F,$60,$84,$16,$7D,$04,
+$23,$74,$E9,$23,$10,$A1,$4B,$1F,$81,$08,$59,$FD,$1B,$24,$50,$0F,$44,$C0,$FF,$1D,
+$21,$00,$00,$00,$00,$49,$45,$4E,$44,$AE,$42,$60,$82);
+  FPointerRight: array[0..339] of Byte = (
+$89,$50,$4E,$47,$0D,$0A,$1A,$0A,$00,$00,$00,$0D,$49,$48,$44,$52,$00,$00,$00,$20,
+$00,$00,$00,$20,$08,$02,$00,$00,$00,$FC,$18,$ED,$A3,$00,$00,$00,$06,$74,$52,$4E,
+$53,$00,$00,$00,$00,$00,$00,$6E,$A6,$07,$91,$00,$00,$01,$09,$49,$44,$41,$54,$78,
+$9C,$B5,$D5,$3F,$0E,$44,$40,$14,$C7,$71,$C7,$DE,$4A,$C7,$01,$1C,$C0,$05,$5C,$C0,
+$05,$14,$4A,$9D,$C6,$46,$14,$0A,$8D,$88,$88,$88,$C8,$EC,$8B,$17,$B3,$FE,$C5,$98,
+$79,$6F,$7E,$07,$F8,$7E,$EC,$AE,$99,$75,$DA,$B6,$AD,$AA,$CA,$B1,$B7,$79,$9E,$97,
+$65,$E9,$FB,$DE,$16,$23,$84,$18,$C7,$51,$AC,$B3,$C2,$60,$1A,$3E,$87,$D8,$C6,$CC,
+$5C,$01,$66,$46,$16,$21,$07,$51,$7E,$46,$B6,$BE,$EB,$20,$37,$0C,$03,$27,$73,$02,
+$70,$75,$5D,$CB,$5F,$9E,$CA,$DC,$02,$9C,$CC,$03,$20,$19,$D2,$2B,$A0,$04,$70,$4D,
+$D3,$18,$32,$2F,$01,$73,$46,$0B,$80,$95,$65,$09,$D7,$17,$DC,$2E,$6F,$19,$5D,$40,
+$9B,$31,$03,$24,$D3,$75,$9D,$B8,$EC,$C0,$50,$00,$DC,$ED,$15,$F0,$67,$E8,$40,$9E,
+$E7,$51,$14,$B9,$AE,$FB,$39,$2E,$08,$82,$24,$49,$48,$80,$22,$4D,$FC,$8A,$E2,$38,
+$56,$A4,$8D,$01,$48,$7B,$9E,$A7,$4E,$1B,$00,$7A,$69,$2D,$00,$12,$10,$D2,$4B,$BF,
+$04,$CC,$D3,$4A,$20,$CB,$32,$52,$FA,$01,$80,$74,$18,$86,$D4,$F4,$2D,$C0,$99,$3E,
+$01,$78,$6A,$38,$D3,$7B,$00,$FE,$E8,$4F,$A7,$86,$21,$BD,$07,$F6,$CF,$CE,$96,$96,
+$40,$51,$14,$56,$D2,$B8,$69,$9A,$7C,$DF,$B7,$92,$C6,$A5,$69,$6A,$2B,$BD,$EE,$07,
+$71,$32,$5A,$AA,$42,$28,$E4,$A3,$00,$00,$00,$00,$49,$45,$4E,$44,$AE,$42,$60,$82);
+  FPointerUp: array[0..385] of Byte = (
+$89,$50,$4E,$47,$0D,$0A,$1A,$0A,$00,$00,$00,$0D,$49,$48,$44,$52,$00,$00,$00,$20,
+$00,$00,$00,$20,$08,$02,$00,$00,$00,$FC,$18,$ED,$A3,$00,$00,$00,$06,$74,$52,$4E,
+$53,$00,$00,$00,$00,$00,$00,$6E,$A6,$07,$91,$00,$00,$01,$37,$49,$44,$41,$54,$78,
+$9C,$B5,$95,$B1,$AE,$45,$50,$10,$45,$EF,$67,$BF,$0F,$A0,$90,$F8,$01,$11,$8D,$52,
+$23,$A2,$D0,$28,$15,$1A,$A5,$48,$14,$22,$0A,$85,$46,$21,$A2,$10,$71,$E7,$BE,$79,
+$99,$1C,$92,$EB,$9D,$73,$8C,$5D,$69,$EC,$BD,$56,$42,$E6,$F5,$52,$49,$DF,$F7,$65,
+$59,$2A,$BD,$A2,$96,$65,$59,$E2,$38,$7E,$AA,$1D,$F0,$F7,$7D,$77,$1C,$E7,$29,$09,
+$C0,$C7,$81,$47,$24,$10,$1F,$07,$1E,$91,$40,$7C,$1A,$60,$96,$20,$7C,$1A,$60,$96,
+$20,$FC,$6D,$DB,$68,$80,$4D,$42,$C4,$1F,$C7,$11,$7A,$99,$25,$44,$FC,$B6,$6D,$A1,
+$94,$53,$E2,$84,$DF,$FC,$26,$49,$12,$36,$89,$13,$3E,$0E,$D4,$75,$ED,$79,$1E,$83,
+$84,$88,$3F,$0C,$43,$23,$24,$4D,$53,$06,$09,$C2,$5F,$D7,$B5,$39,$86,$41,$E2,$02,
+$9F,$47,$E2,$02,$9F,$24,$7C,$DF,$D7,$94,$F8,$17,$1F,$93,$65,$99,$A6,$04,$E1,$C3,
+$C3,$B7,$76,$8C,$8E,$84,$88,$0F,$CF,$D7,$03,$3A,$12,$F2,$F8,$3A,$12,$4A,$F8,$98,
+$3C,$CF,$15,$24,$54,$F1,$31,$41,$10,$48,$49,$88,$F8,$5D,$D7,$C9,$0F,$14,$45,$21,
+$25,$41,$F8,$D3,$34,$C9,$B7,$CB,$4A,$68,$E3,$CB,$4A,$DC,$C1,$C7,$84,$61,$F8,$55,
+$E2,$26,$3E,$46,$BC,$45,$67,$09,$C2,$A7,$AB,$A2,$17,$3A,$A8,$07,$09,$C2,$17,$AF,
+$0A,$A7,$04,$E2,$57,$55,$65,$DB,$F6,$CF,$ED,$58,$96,$85,$A7,$E2,$4F,$02,$F0,$E7,
+$79,$86,$8F,$EC,$7E,$B5,$18,$18,$70,$5D,$F7,$23,$01,$3F,$BA,$69,$9A,$BC,$ED,$18,
+$C3,$30,$A2,$28,$7A,$03,$F3,$7A,$FF,$C9,$BE,$35,$86,$F3,$00,$00,$00,$00,$49,$45,
+$4E,$44,$AE,$42,$60,$82);
   FGap = 4;
  protected
   procedure Paint; override;
  published
+  //Methods
   constructor Create(AOwner: TComponent); override;
-  property Position   : Integer      read FPosition    write SetPosition    default 0;
+  //Events
+  property OnChange   : TNotifyEvent read FOnChange    write FOnChange;
+  //Properties
+  property Caption    : string       read FCaption     write FCaption;
+  property Colour     : TColor       read FColour      write SetColour      default clRed;
+  property FillSlider : Boolean      read FFillSlider  write SetFillSlider  default False;
+  property Gradient   : Boolean      read FGradient    write SetGradient    default False;
+  property HexValue   : Boolean      read FHexValue    write SetHexValue    default False;
   property Max        : Integer      read FMax         write SetMax         default 100;
   property Min        : Integer      read FMin         write SetMin         default 0;
-  property Colour     : Cardinal     read FColour      write SetColour      default clRed;
-  property SliderSize : Integer      read FSliderSize  write SetSliderSize  default 16;
-  property OnChange   : TNotifyEvent read FOnChange    write FOnChange;
-  property Font       : TFont        read FFont        write FFont;
-  property Caption    : string       read FCaption     write FCaption;
+  property Orientation: Integer      read FOrient      write SetOrient      default csVertical;
+  property Pointers   : Boolean      read FPointers    write SetPointers    default True;
+  property Position   : Integer      read FPosition    write SetPosition    default 0; 
   property ShowValue  : Boolean      read FShowValue   write SetShowValue   default False;
   property Step       : Integer      read FStep        write SetStep        default 1;
-  property HexValue   : Boolean      read FHexValue    write SetHexValue    default False;
-  property Orientation: Integer      read FOrient      write SetOrient      default csVertical;
  public
   destructor Destroy; override;
 end;
@@ -316,17 +403,19 @@ type TGJHRegistry = class
   procedure OpenReg(key: String);
   function ExtractKey(var V: String):String;
  published
+  //Methods
   constructor Create(LRegKey: String);
   function DeleteKey(key: String): Boolean;
-  function GetRegValS(V: String;D: String): String;
-  procedure GetRegValA(V: String;var D: array of Byte);
-  function GetRegValI(V: String;D: Cardinal): Cardinal;
-  function GetRegValB(V: String;D: Boolean): Boolean;
-  procedure SetRegValS(V: String;D: String);
-  procedure SetRegValA(V: String;var D: array of Byte);
-  procedure SetRegValI(V: String;D: Cardinal);
-  procedure SetRegValB(V: String;D: Boolean);
   function DoesKeyExist(V: String):Boolean;
+  procedure GetRegValA(V: String;var D: array of Byte);
+  function GetRegValB(V: String;D: Boolean): Boolean;
+  function GetRegValI(V: String;D: Cardinal): Cardinal;
+  function GetRegValS(V: String;D: String): String;
+  procedure SetRegValA(V: String;var D: array of Byte);
+  procedure SetRegValB(V: String;D: Boolean);
+  procedure SetRegValI(V: String;D: Cardinal);
+  procedure SetRegValS(V: String;D: String);
+  //Properties
   property Key : String read FRegKey;
  public
   destructor Destroy; override;
@@ -550,23 +639,14 @@ begin
  FMax:=100;
  FPosition:=0;
  FColour:=$0000FF;
- FSliderSize:=16;
  FCaption:='';
  FShowValue:=False;
  FStep:=1;
  FHexValue:=False;
  FOrient:=csVertical;
- //Create the font, and set it to a default
- FFont:=TFont.Create;
- FFont.Name:='default';
- FFont.Size:=0;
- FFont.Color:=$000000;
- FFont.CharSet:=1;
- FFont.Height:=0;
- FFont.Orientation:=0;
- FFont.Pitch:=fpDefault;
- FFont.Quality:=fqDefault;
- FFont.Style:=[];
+ FGradient:=False;
+ FPointers:=True;
+ FFillSlider:=False;
  //We need to react to the MouseDown, MouseMove and MouseUp events
  OnMouseDown:=@FDown;
  OnMouseMove:=@FMove;
@@ -586,15 +666,34 @@ Paint the control
 -------------------------------------------------------------------------------}
 procedure TGJHSlider.Paint;
 var
+ LSliderSize,
  LPosition,
- LY,
+ LY,Index,
  LTX,LX,LH : Integer;
  LCaption  : String;
+ Lms       : TMemoryStream;
+ Lpng      : TPortableNetworkGraphic;
+ LR        : TRect;
+ procedure GetGraphic(LGraphic: array of Byte);
+ begin
+  Lms.Clear;
+  Lms.Write(LGraphic[0],Length(LGraphic));
+  Lms.Position:=0;
+  Lpng.LoadFromStream(Lms);
+ end;
 begin
  //Work out the position (centre of control)
- if FOrient=csVertical then LX:=(Width-FSliderSize)div 2
- else LX:=(Height-FSliderSize)div 2;
- //Work out where the top and bottom of the slider are
+ if FOrient=csVertical then
+ begin
+  LSliderSize:=(Width div 2)-FGap;
+  LX:=(Width-LSliderSize)div 2;
+ end
+ else
+ begin
+  LSliderSize:=(Height div 2)-FGap;
+  LX:=(Height-LSliderSize)div 2;
+ end;
+ //Work out where the top and bottom of the slider area
  if FOrient=csVertical then
  begin
   LY:=GetSliderStart;
@@ -611,7 +710,7 @@ begin
  Canvas.Brush.Style:=bsClear;
  if LCaption<>'' then
  begin
-  Canvas.Font:=FFont;
+  Canvas.Font:=Font;
   if FOrient=csVertical then
   begin
    LTX:=(Width-Canvas.GetTextWidth(LCaption))div 2;
@@ -626,7 +725,7 @@ begin
  //Are we displaying any caption?
  if FCaption<>'' then
  begin
-  Canvas.Font:=FFont;
+  Canvas.Font:=Font;
   if FOrient=csVertical then
   begin
    LTX:=(Width-Canvas.GetTextWidth(FCaption))div 2;
@@ -639,23 +738,87 @@ begin
   end;
  end;
  //Work out where the filler starts and ends
- LPosition:=LH-Round((FPosition/(FMax-FMin))*(LH-LY));
+ if not FFillSlider then
+  LPosition:=LH-Round((FPosition/(FMax-FMin))*(LH-LY))
+ else
+  LPosition:=LY;
  //And paint it
- Canvas.Brush.Color:=FColour;
  Canvas.Brush.Style:=bsSolid;
  Canvas.Pen.Style:=psClear;
- if FOrient=csVertical then
-  Canvas.Rectangle(LX,LPosition,LX+FSliderSize,LH)
- else
-  Canvas.Rectangle(LPosition,LX,LH,LX+FSliderSize);
+ if FGradient then //Gradient fill
+ begin
+  for Index:=FMin to FMax do
+   if((Index<=FPosition)and(not FFillSlider))
+   or(FFillSlider)then
+   begin
+    Canvas.Brush.Color:=Round((FColour AND $FF)*(Index/FMax))
+                     OR Round((FColour>>8 AND $FF)*(Index/FMax))<<8
+                     OR Round((FColour>>16 AND $FF)*(Index/FMax))<<16;
+    if FOrient=csVertical then
+     Canvas.Rectangle(LX,LPosition,LX+LSliderSize,LH-(Index-FMin))
+    else
+     Canvas.Rectangle(LPosition,LX,LH+(Index-FMin),LX+LSliderSize);
+   end;
+ end
+ else //Solid fill
+ begin
+  Canvas.Brush.Color:=FColour;
+  if FOrient=csVertical then
+   Canvas.Rectangle(LX,LPosition,LX+LSliderSize,LH)
+  else
+   Canvas.Rectangle(LPosition,LX,LH,LX+LSliderSize);
+ end;
  //Draw the outline
  Canvas.Pen.Color:=$000000;
  Canvas.Pen.Style:=psSolid;
  Canvas.Brush.Style:=bsClear;
  if FOrient=csVertical then
-  Canvas.Rectangle(LX,LY,LX+FSliderSize,LH)
+  Canvas.Rectangle(LX,LY,LX+LSliderSize,LH)
  else
-  Canvas.Rectangle(LH,LX,LY,LX+FSliderSize);
+  Canvas.Rectangle(LH,LX,LY,LX+LSliderSize);
+ //Draw the pointers
+ if FPointers then
+ begin
+  if FFillSlider then LPosition:=LH-Round((FPosition/(FMax-FMin))*(LH-LY));
+  Lms:=TMemoryStream.Create;
+  Lpng:=TPortableNetworkGraphic.Create;
+  if FOrient=csVertical then
+  begin
+   //Left
+   GetGraphic(FPointerLeft);
+   LR.Left:=LX+LSliderSize;
+   LR.Top:=LPosition-(Width-LSliderSize)div 4;
+   LR.Right:=Width;
+   LR.Bottom:=LPosition+(Width-LSliderSize)div 4;
+   Canvas.StretchDraw(LR,Lpng);
+   //Right
+   GetGraphic(FPointerRight);
+   LR.Left:=0;
+   LR.Top:=LPosition-(Width-LSliderSize)div 4;
+   LR.Right:=LX;
+   LR.Bottom:=LPosition+(Width-LSliderSize)div 4;
+   Canvas.StretchDraw(LR,Lpng);
+  end
+  else
+  begin
+   //Up
+   GetGraphic(FPointerUp);
+   LR.Top:=LX+LSliderSize;
+   LR.Left:=LPosition-(Height-LSliderSize)div 4;
+   LR.Bottom:=Height;
+   LR.Right:=LPosition+(Height-LSliderSize)div 4;
+   Canvas.StretchDraw(LR,Lpng);
+   //Down
+   GetGraphic(FPointerDown);
+   LR.Top:=0;
+   LR.Left:=LPosition-(Height-LSliderSize)div 4;
+   LR.Bottom:=LX;
+   LR.Right:=LPosition+(Height-LSliderSize)div 4;
+   Canvas.StretchDraw(LR,Lpng);
+  end;
+  Lpng.Free;
+  Lms.Free;
+ end;
 end;
 
 {-------------------------------------------------------------------------------
@@ -686,7 +849,7 @@ end;
 {-------------------------------------------------------------------------------
 The colour has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetColour(const LColour: Cardinal);
+procedure TGJHSlider.SetColour(const LColour: TColor);
 begin
  FColour:=LColour;
  Invalidate; //Force a redraw
@@ -715,19 +878,6 @@ begin
 end;
 
 {-------------------------------------------------------------------------------
-The slider width has been changed
--------------------------------------------------------------------------------}
-procedure TGJHSlider.SetSliderSize(const LSliderSize: Integer);
-begin
- //Ensure it is valid
- if FOrient=csVertical then
-  if LSliderSize<=Width then FSliderSize:=LSliderSize;
- if FOrient=csHorizontal then
-  if LSliderSize<=Height then FSliderSize:=LSliderSize;
- Invalidate; //Force a redraw
-end;
-
-{-------------------------------------------------------------------------------
 The show value boolean has been toggled
 -------------------------------------------------------------------------------}
 procedure TGJHSlider.SetShowValue(const LShowValue: Boolean);
@@ -751,6 +901,33 @@ Orientation has changed
 procedure TGJHSlider.SetOrient(const LOrient: Integer);
 begin
  FOrient:=LOrient;
+ Invalidate; //Force a redraw
+end;
+
+{-------------------------------------------------------------------------------
+Gradient has changed
+-------------------------------------------------------------------------------}
+procedure TGJHSlider.SetGradient(const LGradient: Boolean);
+begin
+ FGradient:=LGradient;
+ Invalidate; //Force a redraw
+end;
+
+{-------------------------------------------------------------------------------
+Showing pointers has changed
+-------------------------------------------------------------------------------}
+procedure TGJHSlider.SetPointers(const LPointers: Boolean);
+begin
+ FPointers:=LPointers;
+ Invalidate; //Force a redraw
+end;
+
+{-------------------------------------------------------------------------------
+Fill the slider has changed
+-------------------------------------------------------------------------------}
+procedure TGJHSlider.SetFillSlider(const LFillSlider: Boolean);
+begin
+ FFillSlider:=LFillSlider;
  Invalidate; //Force a redraw
 end;
 
@@ -812,12 +989,21 @@ var
 begin
  //Get the value
  LCaption:=GetValue;
- if FOrient=csVertical then Result:=Height else Result:=Width;
+ if FOrient=csVertical then
+ begin
+  Result:=Height;
+  if FPointers then dec(Result,Width div 4);
+ end
+ else
+ begin
+  Result:=Width;
+  if FPointers then dec(Result,Height div 4);
+ end;
  //If it is getting printed
  if LCaption<>'' then
  begin
   //Otherwise, find out how high it will be
-  Canvas.Font:=FFont;
+  Canvas.Font:=Font;
   if FOrient=csVertical then
    Result:=Height-Canvas.GetTextHeight(LCaption)
   else
@@ -863,7 +1049,7 @@ begin
  if FCaption='' then Result:=0
  else
  begin
-  Canvas.Font:=FFont;
+  Canvas.Font:=Font;
   if FOrient=csVertical then
    Result:=Canvas.GetTextHeight(FCaption)
   else

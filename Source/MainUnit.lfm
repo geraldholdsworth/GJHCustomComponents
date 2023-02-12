@@ -1,12 +1,12 @@
 object MainForm: TMainForm
   Left = 542
-  Height = 470
+  Height = 414
   Top = 104
   Width = 510
   AllowDropFiles = True
   BorderStyle = bsDialog
-  Caption = 'RISC OS Style'
-  ClientHeight = 470
+  Caption = 'GJH Custom Components'
+  ClientHeight = 414
   ClientWidth = 510
   OnPaint = FormPaint
   OnShow = FormShow

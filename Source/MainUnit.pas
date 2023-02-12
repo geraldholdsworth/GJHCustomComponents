@@ -6,7 +6,7 @@ interface
 
 uses
  Classes, SysUtils, Forms, Controls, ExtCtrls, GJHCustomComponents, Dialogs,
- Graphics, ComCtrls;
+ Graphics;
 
  { TMainForm }
 
@@ -115,13 +115,15 @@ begin
  HSlider.HexValue:=True;
  HSlider.Name:='HorizSlider';
  HSlider.Orientation:=csHorizontal;
+ HSlider.Gradient:=True;
+ HSlider.FillSlider:=True;
  //Radio options
  RadioBox1:=TGJHRadioBox.Create(MainForm as TControl);
  RadioBox1.Parent:=MainForm as TWinControl;
  RadioBox1.Visible:=True;
  RadioBox1.Caption:='Red';
- RadioBox1.Top:=410;
- RadioBox1.Left:=10;
+ RadioBox1.Top:=80;
+ RadioBox1.Left:=144;
  RadioBox1.Name:='RORadioBox1';
  RadioBox1.Ticked:=True;
  //
@@ -129,16 +131,16 @@ begin
  RadioBox2.Parent:=MainForm as TWinControl;
  RadioBox2.Visible:=True;
  RadioBox2.Caption:='Green';
- RadioBox2.Top:=430;
- RadioBox2.Left:=10;
+ RadioBox2.Top:=100;
+ RadioBox2.Left:=144;
  RadioBox2.Name:='RORadioBox2';
  //
  RadioBox3:=TGJHRadioBox.Create(MainForm as TControl);
  RadioBox3.Parent:=MainForm as TWinControl;
  RadioBox3.Visible:=True;
  RadioBox3.Caption:='Blue';
- RadioBox3.Top:=450;
- RadioBox3.Left:=10;
+ RadioBox3.Top:=120;
+ RadioBox3.Left:=144;
  RadioBox3.Name:='RORadioBox3';
  //
  CheckBox1Change(nil);
