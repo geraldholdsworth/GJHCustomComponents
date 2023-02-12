@@ -25,7 +25,7 @@ Boston, MA 02110-1335, USA.
 interface
 
 uses
- Classes, SysUtils, Graphics, ExtCtrls, Controls, Registry, Math, StrUtils;
+ Classes, SysUtils, Graphics, ExtCtrls, Controls, Registry, StrUtils;
 
 {$M+}
 
@@ -666,6 +666,7 @@ Paint the control
 -------------------------------------------------------------------------------}
 procedure TGJHSlider.Paint;
 var
+ LUnit     : Real;
  LSliderSize,
  LPosition,
  LY,Index,
@@ -737,32 +738,36 @@ begin
    Canvas.TextOut(LY+FGap,LTX,FCaption);
   end;
  end;
- //Work out where the filler starts and ends
- if not FFillSlider then
-  LPosition:=LH-Round((FPosition/(FMax-FMin))*(LH-LY))
- else
-  LPosition:=LY;
  //And paint it
  Canvas.Brush.Style:=bsSolid;
  Canvas.Pen.Style:=psClear;
- if FGradient then //Gradient fill
+ //Gradient fill
+ if FGradient then
  begin
-  for Index:=FMin to FMax do
-   if((Index<=FPosition)and(not FFillSlider))
-   or(FFillSlider)then
+  //Smallest unit for rectangles
+  LUnit:=abs(LH-LY)/(FMax-FMin);
+  for Index:=FMin+1 to FMax do
+   if((Index<=FPosition)and(not FFillSlider))//Upto the position
+   or(FFillSlider)then//Or the entire slider?
    begin
-    Canvas.Brush.Color:=Round((FColour AND $FF)*(Index/FMax))
-                     OR Round((FColour>>8 AND $FF)*(Index/FMax))<<8
-                     OR Round((FColour>>16 AND $FF)*(Index/FMax))<<16;
+    Canvas.Brush.Color:=Round((FColour     AND$FF)*(Index/FMax))
+                     OR Round((FColour>>8  AND$FF)*(Index/FMax))<<8
+                     OR Round((FColour>>16 AND$FF)*(Index/FMax))<<16;
     if FOrient=csVertical then
-     Canvas.Rectangle(LX,LPosition,LX+LSliderSize,LH-(Index-FMin))
+     Canvas.Rectangle(LX,LH-Round(LUnit*(Index-1)),LX+LSliderSize,LH-Round(LUnit*Index))
     else
-     Canvas.Rectangle(LPosition,LX,LH+(Index-FMin),LX+LSliderSize);
+     Canvas.Rectangle(LH+Round(LUnit*(Index-1)),LX,LH+Round(LUnit*Index),LX+LSliderSize);
    end;
  end
  else //Solid fill
  begin
+  //Work out where the filler starts and ends
+  if not FFillSlider then
+   LPosition:=LH-Round((FPosition/(FMax-FMin))*(LH-LY))
+  else
+   LPosition:=LY;
   Canvas.Brush.Color:=FColour;
+  //Draw the rectangle
   if FOrient=csVertical then
    Canvas.Rectangle(LX,LPosition,LX+LSliderSize,LH)
   else
@@ -779,7 +784,9 @@ begin
  //Draw the pointers
  if FPointers then
  begin
-  if FFillSlider then LPosition:=LH-Round((FPosition/(FMax-FMin))*(LH-LY));
+  //This is only calculated when partially filled
+  LPosition:=LH-Round((FPosition/(FMax-FMin))*(LH-LY));
+  //Create the containers
   Lms:=TMemoryStream.Create;
   Lpng:=TPortableNetworkGraphic.Create;
   if FOrient=csVertical then
@@ -987,26 +994,28 @@ function TGJHSlider.GetSliderEnd: Integer;
 var
  LCaption : String;
 begin
- //Get the value
- LCaption:=GetValue;
+ //Default, if there is nothing to print
  if FOrient=csVertical then
  begin
   Result:=Height;
+  //Compensate for the pointer overhang
   if FPointers then dec(Result,Width div 4);
  end
  else
  begin
   Result:=Width;
+  //Compensate for the pointer overhang
   if FPointers then dec(Result,Height div 4);
  end;
- //If it is getting printed
+ //Get the value
+ LCaption:=GetValue;
  if LCaption<>'' then
  begin
-  //Otherwise, find out how high it will be
+  //Find out how high it will be
   Canvas.Font:=Font;
   if FOrient=csVertical then
    Result:=Height-Canvas.GetTextHeight(LCaption)
-  else
+  else //Or wide
    Result:=Width-(Canvas.GetTextWidth(FCaption)+FGap);
  end;
 end;
@@ -1042,18 +1051,35 @@ Work out where the top of the slider is
 function TGJHSlider.GetSliderStart: Integer;
 var
  LCaption : String;
+ LTemp: Integer;
 begin
- //Get the value
- LCaption:=GetValue;
- //This depends on whether we have text to print or not
- if FCaption='' then Result:=0
+ //Default - if no text to print
+ if FOrient=csVertical then
+ begin
+  Result:=0;
+  //Compensate for the pointer overhang
+  if FPointers then inc(Result,Width div 4);
+ end
  else
+ begin
+  Result:=0;
+  //Compensate for the pointer overhang
+  if FPointers then inc(Result,Height div 4);
+ end;
+ if FCaption<>'' then
  begin
   Canvas.Font:=Font;
   if FOrient=csVertical then
    Result:=Canvas.GetTextHeight(FCaption)
   else
-   Result:=Ceil((Canvas.GetTextWidth(LCaption)+FGap)/15)*15;
+  begin
+   //Get the maximum value
+   LTemp:=FPosition;//Remember the previous setting
+   FPosition:=FMax;//Set it to the max
+   LCaption:=GetValue;//Get the value
+   FPosition:=LTemp;//Reset it
+   Result:=Canvas.GetTextWidth(LCaption)+FGap;
+  end;
  end;
 end;
 

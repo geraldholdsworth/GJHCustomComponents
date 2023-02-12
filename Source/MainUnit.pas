@@ -90,7 +90,7 @@ begin
  BlueSlider.Top:=50;
  BlueSlider.Left:=90;
  BlueSlider.Colour:=$FF0000;
- BlueSlider.Max:=255;   
+ BlueSlider.Max:=255;
  BlueSlider.Position:=255;
  BlueSlider.Width:=40;
  BlueSlider.Height:=360;
@@ -106,8 +106,8 @@ begin
  HSlider.Top:=30;
  HSlider.Left:=144;
  HSlider.Colour:=$00FFFF;
- HSlider.Max:=255;
- HSlider.Position:=255;
+ HSlider.Max:=100;
+ HSlider.Position:=50;
  HSlider.Width:=360;
  HSlider.Height:=40;
  HSlider.Caption:='Tester';
