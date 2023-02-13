@@ -25,7 +25,7 @@ Boston, MA 02110-1335, USA.
 interface
 
 uses
- Classes, SysUtils, Graphics, ExtCtrls, Controls, Registry, StrUtils;
+ Classes, SysUtils, Graphics, ExtCtrls, Controls, Registry, StrUtils, Math;
 
 {$M+}
 
@@ -740,10 +740,10 @@ begin
  end;
  //And paint it
  Canvas.Brush.Style:=bsSolid;
- Canvas.Pen.Style:=psClear;
  //Gradient fill
  if FGradient then
  begin
+  Canvas.Pen.Style:=psSolid;
   //Smallest unit for rectangles
   LUnit:=abs(LH-LY)/(FMax-FMin);
   for Index:=FMin+1 to FMax do
@@ -753,10 +753,11 @@ begin
     Canvas.Brush.Color:=Round((FColour     AND$FF)*(Index/FMax))
                      OR Round((FColour>>8  AND$FF)*(Index/FMax))<<8
                      OR Round((FColour>>16 AND$FF)*(Index/FMax))<<16;
+    Canvas.Pen.Color:=Canvas.Brush.Color;
     if FOrient=csVertical then
-     Canvas.Rectangle(LX,LH-Round(LUnit*(Index-1)),LX+LSliderSize,LH-Round(LUnit*Index))
+     Canvas.Rectangle(LX,LH-Ceil(LUnit*(Index-1)),LX+LSliderSize,LH-Ceil(LUnit*Index))
     else
-     Canvas.Rectangle(LH+Round(LUnit*(Index-1)),LX,LH+Round(LUnit*Index),LX+LSliderSize);
+     Canvas.Rectangle(LH+Ceil(LUnit*(Index-1)),LX,LH+Ceil(LUnit*Index),LX+LSliderSize);
    end;
  end
  else //Solid fill
@@ -767,6 +768,7 @@ begin
   else
    LPosition:=LY;
   Canvas.Brush.Color:=FColour;
+  Canvas.Pen.Style:=psClear;
   //Draw the rectangle
   if FOrient=csVertical then
    Canvas.Rectangle(LX,LPosition,LX+LSliderSize,LH)
