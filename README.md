@@ -36,6 +36,12 @@ Creates the control. Pass the owner control as the only parameter.<br><br>
 Fires when the position changes.<br><br>
 <B>Properties</B><br>
 In addtion to what is inherited from TGraphicControl, including Top, Left, Width, Height, Visible, Parent, Name and Font.<br>
+<I>BackColour</I>: TColor<br>
+Background colour of the actual slider (not the surrounding area). Has no effect if Transparent is True. Default: clWhite.<br>
+<I>Border3D</I>: Boolean<br>
+Display a RISC OS style 3D border around the entire control. Default: False.<br>
+<I>BorderSize</I>: Integer<br>
+Thickness of the 3D border (multiples of 2). Has no effect if Border3D is False. Default: 2.<br>
 <I>Caption</I>: String<br>
 Text displayed top or right of the slider.<br>
 <I>Colour</I>: TColor<br>
@@ -52,16 +58,24 @@ Maximum the position can be. Default: 100.<br>
 Minimum the position can be. Default: 0.<br>
 <I>Orientation</I>: Integer<br>
 Orientation of the slider - csVertical or csHorizontal. Default: csVertical.<br>
+<I>Outline</I>: String<br>
+Whether, and where, to display a 2D black border. Does not affect the 3D border settings. Default: csOutOuter.<br>
+csOutNone : No borders<br>
+csOutInner: Border around the actual slider position<br>
+csOutOuter: Border around the actual slider entirity<br>
+csOutBoth : Both of the above<br>
 <I>Pointers</I>: Boolean<br>
 Whether to show pointers either side of the slider. Default: True.<br>
 <I>Position</I>: Integer<br>
 Position of the slider (i.e., the value). Default: 0.<br>
 <I>ShowValue</I>: Boolean<br>
 Show the value on the bottom/left of the slider. Default: False.<br>
-<I>SliderSize</I>: Integer<br>
-Width or Height of the slider. Default: 16.<br>
 <I>Step</I>: Integer<br>
 Step size between positions. Default: 1.<br><br>
+<I>Suffix</I>: String<br>
+Text displayed after the value, if shown.<br>
+<I>Transparent</I>: Boolean<br>
+Whether the actual slider is transparent or use BackColour. Default: True.<br>
 <H3>TGJHRegistry</H3>
 This is not a visual control.<br>
 <B>Methods</B><br>

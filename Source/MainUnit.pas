@@ -51,11 +51,12 @@ begin
  TickBox1.Left:=10;
  TickBox1.Name:='ROTickbox';
  TickBox1.OnChange:=@CheckBox1Change;
+ ColourMix.Top:=TickBox1.Top+TickBox1.Height+4;
  //Sliders - Red
  RedSlider:=TGJHSlider.Create(MainForm as TComponent);
  RedSlider.Parent:=MainForm as TWinControl;
  RedSlider.Visible:=True;
- RedSlider.Top:=50;
+ RedSlider.Top:=ColourMix.Top+ColourMix.Height+4;
  RedSlider.Left:=10;
  RedSlider.Colour:=$0000FF;
  RedSlider.Max:=255;
@@ -71,23 +72,27 @@ begin
  GreenSlider:=TGJHSlider.Create(MainForm as TComponent);
  GreenSlider.Parent:=MainForm as TWinControl;
  GreenSlider.Visible:=True;
- GreenSlider.Top:=50;
- GreenSlider.Left:=50;
+ GreenSlider.Top:=ColourMix.Top+ColourMix.Height+4;
+ GreenSlider.Left:=55;
  GreenSlider.Colour:=$00FF00;
  GreenSlider.Max:=255;
  GreenSlider.Position:=128;
- GreenSlider.Width:=40;
- GreenSlider.Height:=360;
- GreenSlider.Caption:='Green';
- GreenSlider.ShowValue:=True;
+ GreenSlider.Width:=30;
+ GreenSlider.Height:=350;
+ GreenSlider.Caption:='';
+ GreenSlider.ShowValue:=False;
  GreenSlider.HexValue:=True;
  GreenSlider.Name:='GreenSlider';
  GreenSlider.OnChange:=@CheckBox1Change;
+ GreenSlider.Transparent:=False;
+ GreenSlider.Pointers:=False;
+ GreenSlider.Border3D:=True;
+ GreenSlider.Outline:=csOutNone;
  //Sliders - Blue
  BlueSlider:=TGJHSlider.Create(MainForm as TComponent);
  BlueSlider.Parent:=MainForm as TWinControl;
  BlueSlider.Visible:=True;
- BlueSlider.Top:=50;
+ BlueSlider.Top:=ColourMix.Top+ColourMix.Height+4;
  BlueSlider.Left:=90;
  BlueSlider.Colour:=$FF0000;
  BlueSlider.Max:=255;
@@ -99,31 +104,33 @@ begin
  BlueSlider.HexValue:=True;
  BlueSlider.Name:='BlueSlider';
  BlueSlider.OnChange:=@CheckBox1Change;
+ BlueSlider.Gradient:=True;
  //Sliders - Horizontal
  HSlider:=TGJHSlider.Create(MainForm as TComponent);
  HSlider.Parent:=MainForm as TWinControl;
  HSlider.Visible:=True;
- HSlider.Top:=30;
- HSlider.Left:=144;
- HSlider.Colour:=$00FFFF;
+ HSlider.Top:=ColourMix.Top;
+ HSlider.Left:=ColourMix.Left+ColourMix.Width+4;
+ HSlider.Colour:=$0000FF;
  HSlider.Max:=100;
  HSlider.Position:=50;
  HSlider.Width:=360;
- HSlider.Height:=40;
- HSlider.Caption:='Tester';
+ HSlider.Height:=30;
+ HSlider.Caption:='';
  HSlider.ShowValue:=True;
  HSlider.HexValue:=True;
  HSlider.Name:='HorizSlider';
  HSlider.Orientation:=csHorizontal;
- HSlider.Gradient:=True;
- HSlider.FillSlider:=True;
+ HSlider.Pointers:=False;
+ HSlider.Outline:=csOutInner;
+ HSlider.Suffix:='K';
  //Radio options
  RadioBox1:=TGJHRadioBox.Create(MainForm as TControl);
  RadioBox1.Parent:=MainForm as TWinControl;
  RadioBox1.Visible:=True;
  RadioBox1.Caption:='Red';
- RadioBox1.Top:=80;
- RadioBox1.Left:=144;
+ RadioBox1.Top:=HSlider.Top+HSlider.Height+4;
+ RadioBox1.Left:=HSlider.Left;
  RadioBox1.Name:='RORadioBox1';
  RadioBox1.Ticked:=True;
  //
@@ -131,16 +138,16 @@ begin
  RadioBox2.Parent:=MainForm as TWinControl;
  RadioBox2.Visible:=True;
  RadioBox2.Caption:='Green';
- RadioBox2.Top:=100;
- RadioBox2.Left:=144;
+ RadioBox2.Top:=RadioBox1.Top+RadioBox1.Height;
+ RadioBox2.Left:=HSlider.Left;
  RadioBox2.Name:='RORadioBox2';
  //
  RadioBox3:=TGJHRadioBox.Create(MainForm as TControl);
  RadioBox3.Parent:=MainForm as TWinControl;
  RadioBox3.Visible:=True;
  RadioBox3.Caption:='Blue';
- RadioBox3.Top:=120;
- RadioBox3.Left:=144;
+ RadioBox3.Top:=RadioBox2.Top+RadioBox2.Height;
+ RadioBox3.Left:=HSlider.Left;
  RadioBox3.Name:='RORadioBox3';
  //
  CheckBox1Change(nil);

@@ -1,7 +1,7 @@
 unit GJHCustomComponents;
 
 {
-GJH Custom Components V1.00
+GJH Custom Components V1.01
 Copyright (C) 2022-23 Gerald Holdsworth gerald@hollypops.co.uk
 
 This source is free software; you can redistribute it and/or modify it under
@@ -33,18 +33,22 @@ uses
 const
  csHorizontal = 0;
  csVertical   = 1;
+ csOutNone    = 0;
+ csOutInner   = 1;
+ csOutOuter   = 2;
+ csOutBoth    = 3;
 
 //RISC OS style tick boxes - declarations ++++++++++++++++++++++++++++++++++++++
 type
  TGJHTickBoxes = class(TGraphicControl)
  private
   FOnlyMouse,
-  FTicked   : Boolean;
+  FTicked    : Boolean;
   FOn,
-  FOff      : TPortableNetworkGraphic;
-  FOnChange : TNotifyEvent;
-  FCaption  : String;
-  FColour   : TColor;
+  FOff       : TPortableNetworkGraphic;
+  FOnChange  : TNotifyEvent;
+  FCaption   : String;
+  FColour    : TColor;
   procedure SetWidth(const LCaption: String);
   procedure SetTicked(const LTicked: Boolean);
  const
@@ -259,20 +263,26 @@ end;
 //Coloured Slider - declarations +++++++++++++++++++++++++++++++++++++++++++++++
 type TGJHSlider = class(TGraphicControl)
  private
-  FColour     : TColor;
+  FBackColour,
+  FColour      : TColor;
+  F3DBorder,
+  FTransparent,
   FMouseIsDown,
   FShowValue,
   FHexValue,
   FGradient,
   FPointers,
-  FFillSlider : Boolean;
+  FFillSlider  : Boolean;
+  FOutline,
   FPosition,
   FMax,
   FMin,
   FOrient,
-  FStep       : Integer;
-  FOnChange   : TNotifyEvent;
-  FCaption    : String;
+  FBorderSize,
+  FStep        : Integer;
+  FOnChange    : TNotifyEvent;
+  FSuffix,
+  FCaption     : String;
   procedure SetPosition(const LPosition: Integer);
   procedure SetStep(const LStep: Integer);
   procedure SetColour(const LColour: TColor);
@@ -284,6 +294,13 @@ type TGJHSlider = class(TGraphicControl)
   procedure SetGradient(const LGradient: Boolean);
   procedure SetPointers(const LPointers: Boolean);
   procedure SetFillSlider(const LFillSlider: Boolean);
+  procedure SetOutline(const LOutline: Integer);
+  procedure SetSuffix(const LSuffix: String);
+  procedure SetCaption(const LCaption: String);
+  procedure SetBackColour(const LBackColour: TColor);
+  procedure SetTransparent(const LTransparent: Boolean);
+  procedure Set3DBorder(const L3DBorder: Boolean);
+  procedure SetBorderSize(const LBorderSize: Integer);
   function GetSliderEnd: Integer;
   function GetValue: String;
   function GetSliderStart: Integer;
@@ -379,18 +396,24 @@ $4E,$44,$AE,$42,$60,$82);
   //Events
   property OnChange   : TNotifyEvent read FOnChange    write FOnChange;
   //Properties
-  property Caption    : string       read FCaption     write FCaption;
-  property Colour     : TColor       read FColour      write SetColour      default clRed;
+  property BackColour : TColor       read FBackColour  write SetBackColour  default $FFFFFF;
+  property Border3D   : Boolean      read F3DBorder    write Set3DBorder    default False;
+  property BorderSize : Integer      read FBorderSize  write SetBorderSize  default 2;
+  property Caption    : string       read FCaption     write SetCaption;
+  property Colour     : TColor       read FColour      write SetColour      default $0000FF;
   property FillSlider : Boolean      read FFillSlider  write SetFillSlider  default False;
   property Gradient   : Boolean      read FGradient    write SetGradient    default False;
   property HexValue   : Boolean      read FHexValue    write SetHexValue    default False;
   property Max        : Integer      read FMax         write SetMax         default 100;
   property Min        : Integer      read FMin         write SetMin         default 0;
   property Orientation: Integer      read FOrient      write SetOrient      default csVertical;
+  property Outline    : Integer      read FOutline     write SetOutline     default csOutOuter;
   property Pointers   : Boolean      read FPointers    write SetPointers    default True;
-  property Position   : Integer      read FPosition    write SetPosition    default 0; 
+  property Position   : Integer      read FPosition    write SetPosition    default 0;
   property ShowValue  : Boolean      read FShowValue   write SetShowValue   default False;
   property Step       : Integer      read FStep        write SetStep        default 1;
+  property Suffix     : string       read FSuffix      write SetSuffix;
+  property Transparent: Boolean      read FTransparent write SetTransparent default True;
  public
   destructor Destroy; override;
 end;
@@ -638,8 +661,10 @@ begin
  FMin:=0;
  FMax:=100;
  FPosition:=0;
+ FBackColour:=$FFFFFF;
  FColour:=$0000FF;
  FCaption:='';
+ FSuffix:='';
  FShowValue:=False;
  FStep:=1;
  FHexValue:=False;
@@ -647,6 +672,10 @@ begin
  FGradient:=False;
  FPointers:=True;
  FFillSlider:=False;
+ FOutline:=csOutOuter;
+ FTransparent:=True;
+ F3DBorder:=False;
+ FBorderSize:=2;
  //We need to react to the MouseDown, MouseMove and MouseUp events
  OnMouseDown:=@FDown;
  OnMouseMove:=@FMove;
@@ -740,6 +769,16 @@ begin
  end;
  //And paint it
  Canvas.Brush.Style:=bsSolid;
+ //Fill in the background
+ if not FTransparent then
+ begin
+  Canvas.Brush.Color:=FBackColour;
+  Canvas.Pen.Style:=psClear;
+  if FOrient=csVertical then
+   Canvas.Rectangle(LX,LY,LX+LSliderSize,LH)
+  else
+   Canvas.Rectangle(LY,LX,LH,LX+LSliderSize);
+ end;
  //Gradient fill
  if FGradient then
  begin
@@ -768,7 +807,13 @@ begin
   else
    LPosition:=LY;
   Canvas.Brush.Color:=FColour;
-  Canvas.Pen.Style:=psClear;
+  if(FOutline AND csOutInner)=csOutInner then
+  begin
+   Canvas.Pen.Style:=psSolid;
+   Canvas.Pen.Color:=$000000;
+  end
+  else
+   Canvas.Pen.Style:=psClear;
   //Draw the rectangle
   if FOrient=csVertical then
    Canvas.Rectangle(LX,LPosition,LX+LSliderSize,LH)
@@ -776,13 +821,36 @@ begin
    Canvas.Rectangle(LPosition,LX,LH,LX+LSliderSize);
  end;
  //Draw the outline
- Canvas.Pen.Color:=$000000;
- Canvas.Pen.Style:=psSolid;
- Canvas.Brush.Style:=bsClear;
- if FOrient=csVertical then
-  Canvas.Rectangle(LX,LY,LX+LSliderSize,LH)
- else
-  Canvas.Rectangle(LH,LX,LY,LX+LSliderSize);
+ if(FOutline AND csOutOuter)=csOutOuter then
+ begin
+  Canvas.Pen.Color:=$000000;
+  Canvas.Pen.Style:=psSolid;
+  Canvas.Brush.Style:=bsClear;
+  if FOrient=csVertical then
+   Canvas.Rectangle(LX,LY,LX+LSliderSize,LH)
+  else
+   Canvas.Rectangle(LH,LX,LY,LX+LSliderSize);
+ end;
+ //3D Border
+ if F3DBorder then
+ begin
+  //Top
+  Canvas.Brush.Style:=bsSolid;
+  Canvas.Pen.Style:=psSolid;
+  Canvas.Brush.Color:=$777777;
+  Canvas.Pen.Color:=$777777;
+  Canvas.Rectangle(0,0,Width,FBorderSize);
+  //Left
+  Canvas.Rectangle(0,0,FBorderSize,Height);
+  //Bottom
+  Canvas.Brush.Color:=$FFFFFF;
+  Canvas.Pen.Color:=$FFFFFF;
+  Canvas.Rectangle(FBorderSize>>1,Height-FBorderSize,Width,Height);
+  Canvas.Rectangle(0,Height-FBorderSize>>1,Width,Height);
+  //Right;
+  Canvas.Rectangle(Width-FBorderSize,FBorderSize>>1,Width,Height);
+  Canvas.Rectangle(Width-FBorderSize>>1,0,Width,Height);
+ end;
  //Draw the pointers
  if FPointers then
  begin
@@ -865,6 +933,51 @@ begin
 end;
 
 {-------------------------------------------------------------------------------
+The suffix has been changed
+-------------------------------------------------------------------------------}
+procedure TGJHSlider.SetSuffix(const LSuffix: String);
+begin
+ FSuffix:=LSuffix;
+ Invalidate; //Force a redraw
+end;
+
+{-------------------------------------------------------------------------------
+The caption has been changed
+-------------------------------------------------------------------------------}
+procedure TGJHSlider.SetCaption(const LCaption: String);
+begin
+ FCaption:=LCaption;
+ Invalidate; //Force a redraw
+end;
+
+{-------------------------------------------------------------------------------
+The background colour has been changed
+-------------------------------------------------------------------------------}
+procedure TGJHSlider.SetBackColour(const LBackColour: TColor);
+begin
+ FBackColour:=LBackColour;
+ Invalidate; //Force a redraw
+end;
+
+{-------------------------------------------------------------------------------
+The transparent setting has been changed
+-------------------------------------------------------------------------------}
+procedure TGJHSlider.SetTransparent(const LTransparent: Boolean);
+begin
+ FTransparent:=LTransparent;
+ Invalidate; //Force a redraw
+end;
+
+{-------------------------------------------------------------------------------
+The 3D Border setting has been changed
+-------------------------------------------------------------------------------}
+procedure TGJHSlider.Set3DBorder(const L3DBorder: Boolean);
+begin
+ F3DBorder:=L3DBorder;
+ Invalidate; //Force a redraw
+end;
+
+{-------------------------------------------------------------------------------
 The max has been changed
 -------------------------------------------------------------------------------}
 procedure TGJHSlider.SetMax(const LMax: Integer);
@@ -909,8 +1022,11 @@ Orientation has changed
 -------------------------------------------------------------------------------}
 procedure TGJHSlider.SetOrient(const LOrient: Integer);
 begin
- FOrient:=LOrient;
- Invalidate; //Force a redraw
+ if(LOrient=csHorizontal)or(LOrient=csVertical)then
+ begin
+  FOrient:=LOrient;
+  Invalidate; //Force a redraw
+ end;
 end;
 
 {-------------------------------------------------------------------------------
@@ -938,6 +1054,30 @@ procedure TGJHSlider.SetFillSlider(const LFillSlider: Boolean);
 begin
  FFillSlider:=LFillSlider;
  Invalidate; //Force a redraw
+end;
+
+{-------------------------------------------------------------------------------
+The outline setting has changed
+-------------------------------------------------------------------------------}
+procedure TGJHSlider.SetOutline(const LOutline: Integer);
+begin
+ if(LOutline>=csOutNone)and(LOutline<=csOutBoth)then
+ begin
+  FOutline:=LOutline;
+  Invalidate; //Force a redraw
+ end;
+end;
+
+{-------------------------------------------------------------------------------
+The border size has changed
+-------------------------------------------------------------------------------}
+procedure TGJHSlider.SetBorderSize(const LBorderSize: Integer);
+begin
+ if(LBorderSize>1)then
+ begin
+  FBorderSize:=(LBorderSize>>1)<<1;//Even numbers only
+  Invalidate; //Force a redraw
+ end;
 end;
 
 {-------------------------------------------------------------------------------
@@ -998,17 +1138,9 @@ var
 begin
  //Default, if there is nothing to print
  if FOrient=csVertical then
- begin
-  Result:=Height;
-  //Compensate for the pointer overhang
-  if FPointers then dec(Result,Width div 4);
- end
+  Result:=Height-(Width div 4)
  else
- begin
-  Result:=Width;
-  //Compensate for the pointer overhang
-  if FPointers then dec(Result,Height div 4);
- end;
+  Result:=Width-(Height div 4);
  //Get the value
  LCaption:=GetValue;
  if LCaption<>'' then
@@ -1032,6 +1164,7 @@ begin
  Result:='';
  //If we are showing a value
  if FShowValue then
+ begin
   if FHexValue then //And it is in hex
   begin 
    //Work out how many digits are required
@@ -1045,6 +1178,8 @@ begin
    L:=Length(IntToStr(FMax));
    Result:=PadLeft(IntToStr(FPosition),L);
   end;
+  if Result<>'' then Result:=Result+FSuffix;
+ end;
 end;
 
 {-------------------------------------------------------------------------------
@@ -1057,31 +1192,20 @@ var
 begin
  //Default - if no text to print
  if FOrient=csVertical then
- begin
-  Result:=0;
-  //Compensate for the pointer overhang
-  if FPointers then inc(Result,Width div 4);
- end
+  Result:=Width div 4
  else
+  Result:=Height div 4;
+ Canvas.Font:=Font;
+ if(FCaption<>'')and(FOrient=csVertical)then
+  Result:=Canvas.GetTextHeight(FCaption);
+ if FOrient=csHorizontal then
  begin
-  Result:=0;
-  //Compensate for the pointer overhang
-  if FPointers then inc(Result,Height div 4);
- end;
- if FCaption<>'' then
- begin
-  Canvas.Font:=Font;
-  if FOrient=csVertical then
-   Result:=Canvas.GetTextHeight(FCaption)
-  else
-  begin
-   //Get the maximum value
-   LTemp:=FPosition;//Remember the previous setting
-   FPosition:=FMax;//Set it to the max
-   LCaption:=GetValue;//Get the value
-   FPosition:=LTemp;//Reset it
-   Result:=Canvas.GetTextWidth(LCaption)+FGap;
-  end;
+  //Get the maximum value
+  LTemp:=FPosition;//Remember the previous setting
+  FPosition:=FMax;//Set it to the max
+  LCaption:=GetValue;//Get the value
+  FPosition:=LTemp;//Reset it
+  Result:=Canvas.GetTextWidth(LCaption)+FGap;
  end;
 end;
 
