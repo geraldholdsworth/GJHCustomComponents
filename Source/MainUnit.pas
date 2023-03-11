@@ -55,6 +55,7 @@ implementation
 
 procedure TMainForm.FormShow(Sender: TObject);
 begin
+ Caption:='GJH Custom Components V'+GJHVersion;
  //RISC OS style tick box
  TickBox1:=TGJHTickBox.Create(MainForm as TControl);
  TickBox1.Parent:=MainForm as TWinControl;
@@ -64,6 +65,7 @@ begin
  TickBox1.Left:=Round(10*(PixelsPerInch/DesignTimePPI));
  TickBox1.Name:='ROTickbox';
  TickBox1.OnChange:=@CheckBox1Change;
+ //Move the colour box
  ColourMix.Top:=TickBox1.Top+TickBox1.Height+Round(4*(PixelsPerInch/DesignTimePPI));
  //Sliders - Red
  RedSlider:=TGJHSlider.Create(MainForm as TComponent);
@@ -207,12 +209,12 @@ end;
 
 procedure TMainForm.Image2Click(Sender: TObject);
 begin
- Caption:='Cancel Clicked';
+ //Caption:='Cancel Clicked';
 end;
 
 procedure TMainForm.Panel1Click(Sender: TObject);
 begin
- Caption:='OK Clicked';
+ //Caption:='OK Clicked';
 end;
 
 procedure TMainForm.CheckBox1Change(Sender: TObject);

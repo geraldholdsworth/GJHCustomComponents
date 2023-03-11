@@ -1,7 +1,7 @@
 unit GJHCustomComponents;
 
 {
-GJH Custom Components V1.02
+GJH Custom Components V1.03
 Copyright (C) 2023 Gerald Holdsworth gerald@hollypops.co.uk
 
 This source is free software; you can redistribute it and/or modify it under
@@ -38,6 +38,7 @@ const
  csOutInner   = 1;
  csOutOuter   = 2;
  csOutBoth    = 3;
+ GJHVersion   = '1.03';
 
 //RISC OS style tick boxes - declarations ++++++++++++++++++++++++++++++++++++++
 type
@@ -46,6 +47,7 @@ type
   FExclusive,
   FOnlyMouse,
   FTicked    : Boolean;
+  FGroup     : Integer;
   FOn,
   FOff       : TPortableNetworkGraphic;
   FOnChange  : TNotifyEvent;
@@ -93,6 +95,7 @@ type
   // Protected Methods
  published
   constructor Create(AOwner: TComponent); override;
+  property Group : Integer read FGroup write FGroup default 0;
  public
   destructor Destroy; override;
 end;
@@ -343,7 +346,8 @@ If this is set, unset every other one
 procedure TGJHTickBoxes.UnsetOthers;
 var
  LParent: TComponent;
- Index: Integer;
+ LGroup,
+ Index  : Integer;
 begin
  if(FExclusive)and(FTicked)then
   //Now we need to unset every other radio box control sibling
@@ -356,7 +360,13 @@ begin
     //Ignore ourself
     if(LParent.Components[Index]<>Self)
     and(LParent.Components[Index].ClassName=ClassName)then //But not other radios
-     TGJHTickBoxes(LParent.Components[Index]).Ticked:=False; //Unset them
+    begin
+     if LParent.Components[Index] is TGJHRadioBox then
+      LGroup:=TGJHRadioBox(LParent.Components[Index]).Group
+     else LGroup:=FGroup;
+     if LGroup=FGroup then //Ignore other groups
+      TGJHTickBoxes(LParent.Components[Index]).Ticked:=False; //Unset them
+    end;
   end;
 end;
 
@@ -428,6 +438,7 @@ var
 begin
  inherited Create(AOwner);
  FExclusive:=True;
+ FGroup:=0;
  //Create the radio box graphics and assign them
  Lms:=TMemoryStream.Create;
  Lms.Write(FRadioOn[0],Length(FRadioOn));
