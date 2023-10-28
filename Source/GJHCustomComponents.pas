@@ -1,7 +1,7 @@
 unit GJHCustomComponents;
 
 {
-GJH Custom Components V1.03
+GJH Custom Components V1.06
 Copyright (C) 2023 Gerald Holdsworth gerald@hollypops.co.uk
 
 This source is free software; you can redistribute it and/or modify it under
@@ -38,7 +38,42 @@ const
  csOutInner   = 1;
  csOutOuter   = 2;
  csOutBoth    = 3;
- GJHVersion   = '1.03';
+ GJHVersion   = '1.06';
+ cmColBlack   = #$81#$00#$00#$00;
+ cmColRed     = #$81#$00#$00#$FF;
+ cmColGreen   = #$81#$00#$FF#$00;
+ cmColDGreen  = #$81#$00#$77#$00;
+ cmColYellow  = #$81#$00#$FF#$FF;
+ cmColBlue    = #$81#$FF#$00#$00;
+ cmColCyan    = #$81#$FF#$00#$FF;
+ cmColMagenta = #$81#$FF#$FF#$00;
+ cmColWhite   = #$81#$FF#$FF#$FF;
+ cmResetCol   = #$82;
+ cmHighBlack  = #$83#$00#$00#$00;
+ cmHighRed    = #$83#$00#$00#$FF;
+ cmHighGreen  = #$83#$00#$FF#$00;
+ cmHighYellow = #$83#$00#$FF#$FF;
+ cmHighBlue   = #$83#$FF#$00#$00;
+ cmHighCyan   = #$83#$FF#$00#$FF;
+ cmHighMagenta= #$83#$FF#$FF#$00;
+ cmHighWhite  = #$83#$FF#$FF#$FF;
+ cmResetHigh  = #$84;
+ cmBold       = #$85#$01;
+ cmItalic     = #$85#$02;
+ cmBoldItalic = #$85#$03;
+ cmStrike     = #$85#$04;
+ cmBoldStrike = #$85#$05;
+ cmItalicStrike= #$85#$06;
+ cmBoldItalicStrike= #$85#$07;
+ cmUnder      = #$85#$08;
+ cmBoldUnder  = #$85#$09;
+ cmItalicUnder= #$85#$0A;
+ cmBoldItalicUnder= #$85#$0B;
+ cmStrikeUnder= #$85#$0C;
+ cmBoldStrikeUnder= #$85#$0D;
+ cmItalicStrikeUnder= #$85#$0E;
+ cmBoldItalicStrikeUnder= #$85#$0F;
+ cmResetStyle = #$86;
 
 //RISC OS style tick boxes - declarations ++++++++++++++++++++++++++++++++++++++
 type
@@ -211,6 +246,55 @@ type TGJHButton = class(TGraphicControl)
   destructor Destroy; override;
 end;
 
+//TColouredMemo class - declarations +++++++++++++++++++++++++++++++++++++++++++
+type TColouredMemo = class(TScrollingWinControl)
+ private
+  type //Extended the TStringList so we can repaint the form when a line is added
+   TExtStringList=class(TStringList)
+    FColouredMemo : TColouredMemo;
+    function Add(const S: string): Integer; override;
+    function AddObject(const S: string; AObject: TObject): Integer; override;
+    function Add(const Fmt : string; const Args : Array of const): Integer; overload;
+    function AddObject(const Fmt: string; Args : Array of const; AObject: TObject): Integer; overload;
+    function AddPair(const AName, AValue: string): TStrings; overload;
+    function AddPair(const AName, AValue: string; AObject: TObject): TStrings; overload;
+    procedure AddStrings(TheStrings: TStrings); override;
+    procedure AddStrings(TheStrings: TStrings; ClearFirst : Boolean); overload;
+    procedure AddStrings(const TheStrings: array of string); overload; override;
+    procedure AddStrings(const TheStrings: array of string; ClearFirst : Boolean); overload;
+    procedure SetStrings(TheStrings: TStrings); override;
+    procedure SetStrings(TheStrings: array of string); override; overload;
+    Procedure AddText(Const S : String); override;
+    procedure AddCommaText(const S: String);
+    procedure AddDelimitedText(const S: String; ADelimiter: char; AStrictDelimiter: Boolean);
+    procedure AddDelimitedtext(const S: String); overload;
+    procedure Append(const S: string);
+    procedure Assign(Source: TPersistent); override;
+   end;
+ var
+  FLines    : TExtStringList;
+  FLineSpace: Cardinal;
+  FIndent   : Cardinal;
+  FContent  : TImage;
+  FPlainText: TExtStringList;
+  FTextWrap : Boolean;
+ protected
+  procedure Paint; override;
+  procedure SetLines(const AValue: TExtStringList);
+  procedure SetTextWrap(const AValue: Boolean);
+ public
+  constructor Create(AOwner: TComponent); override;
+  destructor Destroy; override;
+ published
+  procedure Clear;
+  property AutoScroll;
+  property Indent    : Cardinal       read FIndent    write FIndent;
+  property Lines     : TExtStringList read FLines     write SetLines;
+  property LineSpace : Cardinal       read FLineSpace write FLineSpace;
+  property PlainText : TExtStringList read FPlainText;
+  property TextWrap  : Boolean        read FTextWrap  write SetTextWrap;
+end;
+
 //Registry Class - declarations ++++++++++++++++++++++++++++++++++++++++++++++++
 type TGJHRegistry = class
  private
@@ -224,9 +308,12 @@ type TGJHRegistry = class
   function DeleteKey(key: String): Boolean;
   function DoesKeyExist(V: String):Boolean;
   procedure GetRegValA(V: String;var D: array of Byte);
-  function GetRegValB(V: String;D: Boolean): Boolean;
+  function GetRegValB(V: String;D: Boolean): Boolean;  
+  function GetRegValB(V: String): Boolean; overload;
   function GetRegValI(V: String;D: Cardinal): Cardinal;
+  function GetRegValI(V: String): Cardinal; overload;
   function GetRegValS(V: String;D: String): String;
+  function GetRegValS(V: String): String; overload;
   procedure SetRegValA(V: String;var D: array of Byte);
   procedure SetRegValB(V: String;D: Boolean);
   procedure SetRegValI(V: String;D: Cardinal);
@@ -238,6 +325,7 @@ type TGJHRegistry = class
 end;
 
 procedure Register;
+function ParseCSVLine(Line: String): TStringArray;
 
 //Methods and functions ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -252,7 +340,34 @@ begin
                                              TGJHRadioBox,
                                              TGJHTickBoxes,
                                              TGJHSlider,
-                                             TGJHButton]);
+                                             TGJHButton,
+                                             TColouredMemo]);
+end;
+
+{-------------------------------------------------------------------------------
+Parse a CSV line into an array
+-------------------------------------------------------------------------------}
+function ParseCSVLine(Line: String): TStringArray;
+var
+ Index: Integer;
+ PLine: PChar;
+begin
+ Result:=nil;
+ //If not blank
+ if Line<>'' then
+ begin
+  //Split it into an array
+  Result:=Line.Split(',','"');//Split at commas, unless surrounded by quotes
+  //Make sure it has at least a field
+  if Length(Result)>0 then
+  for Index:=0 to Length(Result)-1 do
+  begin
+   //Get each field
+   PLine:=PChar(Result[Index]);
+   //And remove any quotes (except those escaped)
+   Result[Index]:=AnsiExtractQuotedStr(PLine,'"');
+  end;
+ end;
 end;
 
 //Tickbox parent Methods +++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -279,6 +394,8 @@ Class destructor - tidies up afterwards
 -------------------------------------------------------------------------------}
 destructor TGJHTickBoxes.Destroy;
 begin
+ FOn.Free;
+ FOff.Free;
  inherited;
 end;
 
@@ -334,6 +451,7 @@ procedure TGJHTickBoxes.Click;
 begin
  if not FExclusive then FTicked:=not FTicked else FTicked:=True;
  Invalidate;//Force a redraw
+ Update;
  UnsetOthers;
  //Fire the OnChange event
  if Assigned(FOnChange) then FOnChange(Self as TObject);
@@ -381,6 +499,7 @@ begin
  Height:=Canvas.TextHeight(Ltext);
  Width:=Canvas.TextWidth(Ltext)+Height+4;
  Invalidate;//Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -390,6 +509,7 @@ procedure TGJHTickBoxes.SetTicked(const LTicked: Boolean);
 begin
  FTicked:=LTicked;
  Invalidate; //Force a redraw
+ Update;
  UnsetOthers;
  //Fire the OnChange event
  if not FOnlyMouse then //Unless we only reacting to a mouse click
@@ -735,6 +855,7 @@ begin
  if(LPosition>=FMin)and(LPosition<=FMax)then FPosition:=LPosition;
  FPosition:=(FPosition div FStep)*FStep;
  Invalidate; //Force a redraw
+ Update;
  //Fire the OnChange event, if it has changed
  if FPosition<>LOldPosition then
   if Assigned(FOnChange) then FOnChange(Self as TObject);
@@ -757,6 +878,7 @@ procedure TGJHSlider.SetColour(const LColour: TColor);
 begin
  FColour:=LColour;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -766,6 +888,7 @@ procedure TGJHSlider.SetSuffix(const LSuffix: String);
 begin
  FSuffix:=LSuffix;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -775,6 +898,7 @@ procedure TGJHSlider.SetCaption(const LCaption: String);
 begin
  FCaption:=LCaption;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -784,6 +908,7 @@ procedure TGJHSlider.SetBackColour(const LBackColour: TColor);
 begin
  FBackColour:=LBackColour;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -793,6 +918,7 @@ procedure TGJHSlider.SetTransparent(const LTransparent: Boolean);
 begin
  FTransparent:=LTransparent;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -802,6 +928,7 @@ procedure TGJHSlider.Set3DBorder(const L3DBorder: Boolean);
 begin
  F3DBorder:=L3DBorder;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -813,6 +940,7 @@ begin
  if LMax>FMin then FMax:=LMax;
  if FPosition>FMax then FPosition:=FMax;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -824,6 +952,7 @@ begin
  if FMax>LMin then FMin:=LMin;
  if FPosition<FMin then FPosition:=FMin;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -833,6 +962,7 @@ procedure TGJHSlider.SetShowValue(const LShowValue: Boolean);
 begin
  FShowValue:=LShowValue;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -842,6 +972,7 @@ procedure TGJHSlider.SetHexValue(const LHexValue: Boolean);
 begin
  FHexValue:=LHexValue;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -853,6 +984,7 @@ begin
  begin
   FOrient:=LOrient;
   Invalidate; //Force a redraw
+  Update;
  end;
 end;
 
@@ -863,6 +995,7 @@ procedure TGJHSlider.SetGradient(const LGradient: Boolean);
 begin
  FGradient:=LGradient;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -872,6 +1005,7 @@ procedure TGJHSlider.SetPointers(const LPointers: Boolean);
 begin
  FPointers:=LPointers;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -881,6 +1015,7 @@ procedure TGJHSlider.SetFillSlider(const LFillSlider: Boolean);
 begin
  FFillSlider:=LFillSlider;
  Invalidate; //Force a redraw
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -892,6 +1027,7 @@ begin
  begin
   FOutline:=LOutline;
   Invalidate; //Force a redraw
+  Update;
  end;
 end;
 
@@ -1134,6 +1270,7 @@ procedure TGJHButton.FDown(Sender: TObject; Button: TMouseButton;
 begin
  FPushed:=True;
  Invalidate;
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -1146,6 +1283,7 @@ var
 begin
  FPushed:=False;
  Invalidate;
+ Update;
  if Assigned(FOnClick) then FOnClick(Self as TObject);
  if HasParent then
  begin
@@ -1165,6 +1303,7 @@ begin
  FDefault:=LDefault;
  SetDimensions;
  Invalidate;
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -1173,7 +1312,8 @@ The caption has changed
 procedure TGJHButton.SetCaption(const LCaption: String);
 begin
  FCaption:=LCaption;
- Invalidate
+ Invalidate;
+ Update;
 end;
 
 {-------------------------------------------------------------------------------
@@ -1195,6 +1335,411 @@ The modal result has changed
 procedure TGJHButton.SetModalResult(const LModalResult: TModalResult);
 begin
  FModalResult:=LModalResult;
+end;
+
+//ColouredMemo Methods +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+{-------------------------------------------------------------------------------
+These bunch of functions and procedures are just inherited from the base class.
+They are so that the main component gets repainted when the list is updated.
+-------------------------------------------------------------------------------}
+function TColouredMemo.TExtStringList.Add(const S: string): Integer;
+begin
+ Result:=inherited Add(S);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+function TColouredMemo.TExtStringList.AddObject(const S: string; AObject: TObject): Integer;
+begin
+ Result:=inherited AddObject(S,AObject);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+function TColouredMemo.TExtStringList.Add(const Fmt : string; const Args : Array of const): Integer;
+begin
+ Result:=inherited Add(Fmt,Args);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+function TColouredMemo.TExtStringList.AddObject(const Fmt: string; Args : Array of const; AObject: TObject): Integer;
+begin
+ Result:=inherited AddObject(Fmt,Args,AObject);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+function TColouredMemo.TExtStringList.AddPair(const AName, AValue: string): TStrings;
+begin
+ Result:=inherited AddPair(AName,AValue);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+function TColouredMemo.TExtStringList.AddPair(const AName, AValue: string; AObject: TObject): TStrings;
+begin
+ Result:=inherited AddPair(AName,AValue,AObject);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+procedure TColouredMemo.TExtStringList.AddStrings(TheStrings: TStrings);
+begin
+ inherited AddStrings(TheStrings);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+procedure TColouredMemo.TExtStringList.AddStrings(TheStrings: TStrings; ClearFirst : Boolean);
+begin
+ inherited AddStrings(TheStrings,ClearFirst);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+procedure TColouredMemo.TExtStringList.AddStrings(const TheStrings: array of string);
+begin
+ inherited AddStrings(TheStrings);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+procedure TColouredMemo.TExtStringList.AddStrings(const TheStrings: array of string; ClearFirst : Boolean);
+begin
+ inherited AddStrings(TheStrings,ClearFirst);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+procedure TColouredMemo.TExtStringList.SetStrings(TheStrings: TStrings);
+begin
+ inherited SetStrings(TheStrings);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+procedure TColouredMemo.TExtStringList.SetStrings(TheStrings: array of string);
+begin
+ inherited SetStrings(TheStrings);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+Procedure TColouredMemo.TExtStringList.AddText(Const S : String);
+begin
+ inherited AddText(S);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+procedure TColouredMemo.TExtStringList.AddCommaText(const S: String);
+begin
+ inherited AddCommaText(S);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+procedure TColouredMemo.TExtStringList.AddDelimitedText(const S: String; ADelimiter: char; AStrictDelimiter: Boolean);
+begin
+ inherited AddDelimitedText(S,ADelimiter,AStrictDelimiter);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+procedure TColouredMemo.TExtStringList.AddDelimitedtext(const S: String);
+begin
+ inherited AddDelimitedText(S);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+procedure TColouredMemo.TExtStringList.Append(const S: string);
+begin
+ inherited Append(S);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+procedure TColouredMemo.TExtStringList.Assign(Source: TPersistent);
+begin
+ inherited Assign(Source);
+ if Assigned(FColouredMemo) then FColouredMemo.Invalidate;
+end;
+
+{-------------------------------------------------------------------------------
+Constructor method for the coloured memo
+-------------------------------------------------------------------------------}
+constructor TColouredMemo.Create(AOwner: TComponent);
+begin
+ inherited Create(AOwner);
+ //Create the line container
+ FLines:=TExtStringList.Create;
+ FLines.FColouredMemo:=Self;
+ //Create the plain text container
+ FPlainText:=TExtStringList.Create;
+ FPlainText.FColouredMemo:=Self;
+ //Create the canvas
+ FContent:=TImage.Create(Self);
+ FContent.Parent:=Self;
+ FContent.Top :=0;
+ FContent.Left:=0;
+ FContent.Picture.Bitmap.Width :=ClientWidth;
+ FContent.Picture.Bitmap.Height:=ClientHeight;
+ FContent.Width :=ClientWidth;
+ FContent.Height:=ClientHeight;
+ FContent.Visible:=True;
+ //Defaults
+ FLineSpace:=4;   //Space between lines, in pixels
+ FIndent:=4;      //Indent in from the left, in pixels
+ Color:=$FFFFFF;  //Default background colour
+ TextWrap:=False; //Whether to wrap a line to the next
+end;
+
+{-------------------------------------------------------------------------------
+Destructor method for the coloured memo
+-------------------------------------------------------------------------------}
+destructor TColouredMemo.Destroy;
+begin
+ FLines.Free;
+ FPlainText.Free;
+ FContent.Free;
+ inherited Destroy;
+end;
+
+{-------------------------------------------------------------------------------
+Repaint method - this is where most of the work is done
+-------------------------------------------------------------------------------}
+procedure TColouredMemo.Paint;
+var
+ LLine,
+ LIndex,
+ XPos,
+ YPos,
+ W,H    : Integer;
+ LPart,
+ LText  : String;
+ LTemp,
+ LRed,
+ LGreen,
+ LBlue  : Byte;
+ //Function to remove control characters
+ function RemCont(rcText: String): String;
+ var rcIndex: Integer;
+ begin
+  Result:='';
+  if Length(rcText)>1 then
+  begin
+   rcIndex:=1;
+   while rcIndex<=Length(rcText) do
+   begin
+    //Only ASCII printable characters
+    if(ord(rcText[rcIndex])>31)and(ord(rcText[rcIndex])<127)then
+     Result:=Result+rcText[rcIndex];
+    //Our special styles, so move along a few more characters
+    if(ord(rcText[rcIndex])=$81)
+    or(ord(rcText[rcIndex])=$83)then inc(rcIndex,3);
+    if ord(rcText[rcIndex])=$85 then inc(rcIndex,1);
+    //Next character
+    inc(rcIndex);
+   end;
+  end;
+ end;
+ //Procedure to print the text
+ procedure PrintText(ptText: String);
+ begin
+  FContent.Canvas.FillRect(XPos,YPos,
+                           XPos+FContent.Canvas.TextWidth(ptText),
+                           YPos+FContent.Canvas.TextHeight(ptText)+FLineSpace);
+  FContent.Canvas.TextOut(XPos,YPos,ptText);
+  inc(XPos,FContent.Canvas.TextWidth(ptText));
+ end;
+ //Procedure to wrap the text
+ procedure WrapText(wtText: String);
+ var
+  LStart,
+  LLength: Integer;
+ begin
+  //Only wrap if it is longer than the available width
+  if(FTextWrap)and(FContent.Canvas.TextWidth(wtText)+XPos>W)then
+  begin
+   //Start at the beginning
+   LStart:=1;
+   //And continue until we are out of characters
+   while LStart<Length(wtText) do
+   begin
+    //Length of remaining string (if LStart+LLength are bigger than the string
+    //length, then it'll just go to the end of the string)
+    LLength:=Length(wtText);
+    //Reduce the length until it'll fit
+    while(FContent.Canvas.TextWidth(Copy(wtText,LStart,LLength))+XPos>W)
+      and(LLength>1)do dec(LLength);
+    //Then print what we can
+    PrintText(Copy(wtText,LStart,LLength));
+    //And move the starting position along
+    inc(LStart,LLength);
+    //If there are more characters left, then do a CR and LF
+    if LStart<=Length(wtText) then
+    begin
+     //Move the Y pointer downwards
+     inc(YPos,FContent.Canvas.TextHeight(wtText)+FLineSpace);
+     //Reset X pointer
+     XPos:=FLineSpace;
+    end;
+   end;
+   //The string is only a single character, but still won't fit, so CR LF
+   if Length(wtText)=1 then
+   begin
+    //Move the Y pointer downwards
+    inc(YPos,FContent.Canvas.TextHeight(wtText)+FLineSpace);
+    //Reset X pointer
+    XPos:=FLineSpace;
+   end;
+   //The starting point is the last character, so print and move along
+   if LStart=Length(wtText) then PrintText(Copy(wtText,LStart));
+  end
+  else PrintText(wtText);//No text wrapping
+ end;
+begin
+ //Set the font
+ FContent.Canvas.Font:=Font;
+ //Starting size
+ W:=ClientWidth;
+ H:=FLineSpace;
+ //First pass, calculate then set the canvas size
+ if FLines.Count>0 then
+ begin
+  FPlainText.Clear;
+  for LLine:=0 to FLines.Count-1 do
+  begin
+   LText:='';
+   if FLines[LLine]='' then LText:=' ' //blank line will give 0 height
+   else LText:=RemCont(FLines[LLine]);//Remove control characters
+   if FContent.Canvas.TextWidth(LText)+FIndent>W then
+   begin
+    if not FTextWrap then W:=FContent.Canvas.TextWidth(LText)+FIndent
+    //Take account of any text wrapping
+    else inc(H,(FContent.Canvas.TextHeight(LText)+FLineSpace)
+              *((FContent.Canvas.TextWidth(LText)+FIndent)div W));
+   end;
+   //Increase the height by a line
+   inc(H,FContent.Canvas.TextHeight(LText)+FLineSpace);
+   FPlainText.Add(LText);
+  end;
+ end;
+ //Height can't be smaller than the scroll height
+ if H<ClientHeight then H:=ClientHeight;
+ //Set the canvas size
+ FContent.Picture.Bitmap.Width:=W;
+ FContent.Picture.Bitmap.Height:=H;
+ FContent.Width:=W;
+ FContent.Height:=H;
+ //Clear the background
+ FContent.Canvas.Brush.Color:=Color;
+ FContent.Canvas.Brush.Style:=bsSolid;
+ FContent.Canvas.Pen.Color:=Color;
+ FContent.Canvas.Pen.Style:=psSolid;
+ FContent.Canvas.Rectangle(0,0,W,H);
+ //Are there any lines entered?
+ if FLines.Count>0 then
+ begin
+  //Start at the top
+  YPos:=FLineSpace;
+  //Work our way through the lines
+  for LLine:=0 to FLines.Count-1 do
+  begin
+   //Get the current line
+   LText:=FLines[LLine];
+   //If it is empty, put a space in so we get a blank line
+   if LText='' then LText:=' ';
+   //Indent it
+   XPos:=FIndent;
+   //Clear the 'part of' string
+   LPart:='';
+   //Start at the beginning
+   LIndex:=1;
+   while LIndex<=Length(LText) do
+   begin
+    //Top bit set? Then this means a change of style or colour
+    if(ord(LText[LIndex])and$80)=$80 then
+    begin
+     //Output what we currently have
+     if LPart<>'' then WrapText(LPart);
+     //New part of string
+     LPart:='';
+     case (ord(LText[LIndex])AND$0F) of
+      $01,$03: //Change of colour : $81 and $83
+      begin
+       LTemp:=ord(LText[LIndex])AND$0F;
+       //Get the Blue index
+       inc(LIndex);
+       if LIndex<=Length(LText) then LBlue :=ord(LText[LIndex]);
+       //Get the Green index
+       inc(LIndex);
+       if LIndex<=Length(LText) then LGreen:=ord(LText[LIndex]);
+       //Get the Red index
+       inc(LIndex);
+       if LIndex<=Length(LText) then LRed  :=ord(LText[LIndex]);
+       //Set the colour
+       if Ltemp=$01 then //Foreground (text)
+        FContent.Canvas.Font.Color:=LRed+LGreen<<8+LBlue<<16;
+       if Ltemp=$03 then //Background (highlight)
+        FContent.Canvas.Brush.Color:=LRed+LGreen<<8+LBlue<<16;
+      end;
+      $05: //Change of style : $85
+      begin
+       inc(LIndex);
+       if LIndex<=Length(LText) then
+       begin
+        //Bold
+        if(ord(LText[LIndex])AND$01)=$01 then
+         FContent.Canvas.Font.Style:=FContent.Canvas.Font.Style+[fsBold]
+        else //No Bold
+         FContent.Canvas.Font.Style:=FContent.Canvas.Font.Style-[fsBold];
+        //Italic
+        if(ord(LText[LIndex])AND$02)=$02 then
+         FContent.Canvas.Font.Style:=FContent.Canvas.Font.Style+[fsItalic]
+        else //No Italic
+         FContent.Canvas.Font.Style:=FContent.Canvas.Font.Style-[fsItalic];
+        //Strikeout
+        if(ord(LText[LIndex])AND$04)=$04 then
+         FContent.Canvas.Font.Style:=FContent.Canvas.Font.Style+[fsStrikeOut]
+        else //No Strikeout
+         FContent.Canvas.Font.Style:=FContent.Canvas.Font.Style-[fsStrikeOut];
+        //Underline
+        if(ord(LText[LIndex])AND$08)=$08 then
+         FContent.Canvas.Font.Style:=FContent.Canvas.Font.Style+[fsUnderline]
+        else //No Underline
+         FContent.Canvas.Font.Style:=FContent.Canvas.Font.Style-[fsUnderline];
+       end;
+      end;
+      $02: FContent.Canvas.Font.Color:=Font.Color;//Reset foreground colour : $82
+      $04: FContent.Canvas.Brush.Color:=Color;//Reset background colour : $84
+      $06: FContent.Canvas.Font.Style:=Font.Style;//Reset font style : $86
+     end;
+    end;
+    //Valid ASCII character? add it to the 'part of' string
+    if(ord(LText[LIndex])>31)and(ord(LText[LIndex])<127)then
+     LPart:=LPart+LText[LIndex];
+    //Next character
+    inc(LIndex);
+   end;
+   //Anything left that hasn't been printed?
+   if LPart<>'' then WrapText(LPart);
+   //Move the Y pointer downwards
+   inc(YPos,FContent.Canvas.TextHeight(LText)+FLineSpace);
+  end;
+ end;
+end;
+
+{-------------------------------------------------------------------------------
+Clears the text
+-------------------------------------------------------------------------------}
+procedure TColouredMemo.Clear;
+begin
+ FLines.Clear;
+end;
+
+{-------------------------------------------------------------------------------
+Inherits from the base class - unlikely this ever gets called
+-------------------------------------------------------------------------------}
+procedure TColouredMemo.SetLines(const AValue: TExtStringList);
+begin
+ if AValue<>nil then FLines.Assign(AValue);
+ Invalidate;
+end;
+
+{-------------------------------------------------------------------------------
+Sets the text wrap flag, and fires off the repaint
+-------------------------------------------------------------------------------}
+procedure TColouredMemo.SetTextWrap(const AValue: Boolean);
+begin
+ FTextWrap:=AValue;
+ Invalidate;
 end;
 
 //Registry Class methods +++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1253,6 +1798,15 @@ begin
  FRegistry.Free;
  Result:=X;
 end;
+function TGJHRegistry.GetRegValS(V: String): String;
+var
+ X: String;
+begin
+ OpenReg(ExtractKey(V));
+ If FRegistry.ValueExists(V)then X:=FRegistry.ReadString(V) else X:='';
+ FRegistry.Free;
+ Result:=X;
+end;
 
 {-------------------------------------------------------------------------------
 Function to read an array from the registry, or create it if it doesn't exist
@@ -1287,6 +1841,15 @@ begin
  FRegistry.Free;
  Result:=X;
 end;
+function TGJHRegistry.GetRegValI(V: String): Cardinal;
+var
+ X: Cardinal;
+begin
+ OpenReg(ExtractKey(V));
+ If FRegistry.ValueExists(V)then X:=FRegistry.ReadInteger(V) else X:=0;
+ FRegistry.Free;
+ Result:=X;
+end;
 
 {-------------------------------------------------------------------------------
 Function to read a boolean from the registry, or create it if it doesn't exist
@@ -1298,6 +1861,15 @@ begin
  OpenReg(ExtractKey(V));
  If FRegistry.ValueExists(V)then X:=FRegistry.ReadBool(V)
  else begin X:=D;FRegistry.WriteBool(V,X);end;
+ FRegistry.Free;
+ Result:=X;
+end;
+function TGJHRegistry.GetRegValB(V: String): Boolean;
+var
+ X: Boolean;
+begin
+ OpenReg(ExtractKey(V));
+ If FRegistry.ValueExists(V)then X:=FRegistry.ReadBool(V) else X:=False;
  FRegistry.Free;
  Result:=X;
 end;
