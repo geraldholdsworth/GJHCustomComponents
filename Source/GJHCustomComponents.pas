@@ -1,8 +1,8 @@
 unit GJHCustomComponents;
 
 {
-GJH Custom Components V1.06
-Copyright (C) 2023 Gerald Holdsworth gerald@hollypops.co.uk
+GJH Custom Components V1.08
+Copyright (C) 2024 Gerald Holdsworth gerald@hollypops.co.uk
 
 This source is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public Licence as published by the Free
@@ -21,63 +21,65 @@ Boston, MA 02110-1335, USA.
 }
 
 {$mode ObjFPC}{$H+}
-
+{$WARN 2005 off : Comment level $1 found}
 interface
 
 uses
- Classes, SysUtils, Graphics, ExtCtrls, Controls, Registry, StrUtils, Math,
- Forms;
+ Classes, SysUtils, Graphics, ExtCtrls, Controls, StrUtils, Math, Forms
+ {{$IFNDEF Darwin}}, Registry//{$ENDIF}
+// {$IFDEF Darwin}, MacOSAll, CFPreferences{$ENDIF}
+ ;
 
 {$M+}
 
 //Global constants
 const
- csHorizontal = 0;
- csVertical   = 1;
- csOutNone    = 0;
- csOutInner   = 1;
- csOutOuter   = 2;
- csOutBoth    = 3;
- GJHVersion   = '1.06';
- cmColBlack   = #$81#$00#$00#$00;
- cmColRed     = #$81#$00#$00#$FF;
- cmColGreen   = #$81#$00#$FF#$00;
- cmColDGreen  = #$81#$00#$77#$00;
- cmColYellow  = #$81#$00#$FF#$FF;
- cmColBlue    = #$81#$FF#$00#$00;
- cmColCyan    = #$81#$FF#$00#$FF;
- cmColMagenta = #$81#$FF#$FF#$00;
- cmColWhite   = #$81#$FF#$FF#$FF;
- cmResetCol   = #$82;
- cmHighBlack  = #$83#$00#$00#$00;
- cmHighRed    = #$83#$00#$00#$FF;
- cmHighGreen  = #$83#$00#$FF#$00;
- cmHighYellow = #$83#$00#$FF#$FF;
- cmHighBlue   = #$83#$FF#$00#$00;
- cmHighCyan   = #$83#$FF#$00#$FF;
- cmHighMagenta= #$83#$FF#$FF#$00;
- cmHighWhite  = #$83#$FF#$FF#$FF;
- cmResetHigh  = #$84;
- cmBold       = #$85#$01;
- cmItalic     = #$85#$02;
- cmBoldItalic = #$85#$03;
- cmStrike     = #$85#$04;
- cmBoldStrike = #$85#$05;
- cmItalicStrike= #$85#$06;
- cmBoldItalicStrike= #$85#$07;
- cmUnder      = #$85#$08;
- cmBoldUnder  = #$85#$09;
- cmItalicUnder= #$85#$0A;
- cmBoldItalicUnder= #$85#$0B;
- cmStrikeUnder= #$85#$0C;
- cmBoldStrikeUnder= #$85#$0D;
- cmItalicStrikeUnder= #$85#$0E;
+ csHorizontal           = 0;
+ csVertical             = 1;
+ csOutNone              = 0;
+ csOutInner             = 1;
+ csOutOuter             = 2;
+ csOutBoth              = 3;
+ GJHVersion             = '1.08';
+ cmColBlack             = #$81#$00#$00#$00;
+ cmColRed               = #$81#$00#$00#$FF;
+ cmColGreen             = #$81#$00#$FF#$00;
+ cmColDGreen            = #$81#$00#$77#$00;
+ cmColYellow            = #$81#$00#$FF#$FF;
+ cmColBlue              = #$81#$FF#$00#$00;
+ cmColCyan              = #$81#$FF#$00#$FF;
+ cmColMagenta           = #$81#$FF#$FF#$00;
+ cmColWhite             = #$81#$FF#$FF#$FF;
+ cmResetCol             = #$82;
+ cmHighBlack            = #$83#$00#$00#$00;
+ cmHighRed              = #$83#$00#$00#$FF;
+ cmHighGreen            = #$83#$00#$FF#$00;
+ cmHighYellow           = #$83#$00#$FF#$FF;
+ cmHighBlue             = #$83#$FF#$00#$00;
+ cmHighCyan             = #$83#$FF#$00#$FF;
+ cmHighMagenta          = #$83#$FF#$FF#$00;
+ cmHighWhite            = #$83#$FF#$FF#$FF;
+ cmResetHigh            = #$84;
+ cmBold                 = #$85#$01;
+ cmItalic               = #$85#$02;
+ cmBoldItalic           = #$85#$03;
+ cmStrike               = #$85#$04;
+ cmBoldStrike           = #$85#$05;
+ cmItalicStrike         = #$85#$06;
+ cmBoldItalicStrike     = #$85#$07;
+ cmUnder                = #$85#$08;
+ cmBoldUnder            = #$85#$09;
+ cmItalicUnder          = #$85#$0A;
+ cmBoldItalicUnder      = #$85#$0B;
+ cmStrikeUnder          = #$85#$0C;
+ cmBoldStrikeUnder      = #$85#$0D;
+ cmItalicStrikeUnder    = #$85#$0E;
  cmBoldItalicStrikeUnder= #$85#$0F;
- cmResetStyle = #$86;
+ cmResetStyle           = #$86;
 
 //RISC OS style tick boxes - declarations ++++++++++++++++++++++++++++++++++++++
 type
- TGJHTickBoxes = class(TGraphicControl)
+ TRISCOSTickBoxes = class(TGraphicControl)
  private
   FExclusive,
   FOnlyMouse,
@@ -110,7 +112,7 @@ type
 
 //Tick box - declarations ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 type
- TGJHTickBox = class(TGJHTickBoxes)
+ TRISCOSTickBox = class(TRISCOSTickBoxes)
  private
   const
 {$INCLUDE 'TickBoxGraphics.pas'}
@@ -122,7 +124,7 @@ end;
 
 //Radio box - declarations +++++++++++++++++++++++++++++++++++++++++++++++++++++
 type
- TGJHRadioBox = class(TGJHTickBoxes)
+ TRISCOSRadioBox = class(TRISCOSTickBoxes)
  private
   const
 {$INCLUDE 'RadioBoxGraphics.pas'}
@@ -136,7 +138,7 @@ type
 end;
 
 //Coloured Slider - declarations +++++++++++++++++++++++++++++++++++++++++++++++
-type TGJHSlider = class(TGraphicControl)
+type TRISCOSSlider = class(TGraphicControl)
  private
   FBackColour,
   FColour      : TColor;
@@ -216,12 +218,12 @@ type TGJHSlider = class(TGraphicControl)
 end;
 
 //RISC OS Buttons - declarations +++++++++++++++++++++++++++++++++++++++++++++++
-type TGJHButton = class(TGraphicControl)
+type TRISCOSButton = class(TGraphicControl)
  private
-  FOnClick : TNotifyEvent;
+  FOnClick    : TNotifyEvent;
   FPushed,
-  FDefault : Boolean;
-  FCaption : String;
+  FDefault    : Boolean;
+  FCaption    : String;
   FModalResult: TModalResult;
   procedure FDown(Sender: TObject; {%H-}Button: TMouseButton;
                               {%H-}Shift: TShiftState; {%H-}X, {%H-}Y: Integer);
@@ -237,13 +239,14 @@ type TGJHButton = class(TGraphicControl)
   //Methods
   constructor Create(AOwner: TComponent); override;
   //Events
-  property OnClick   : TNotifyEvent read FOnClick    write FOnClick;
+  property OnClick    : TNotifyEvent read FOnClick     write FOnClick;
   //Properties
-  property Default : Boolean       read FDefault  write SetDefault  default False;
-  property Caption : String        read FCaption  write SetCaption;
+  property Default    : Boolean      read FDefault     write SetDefault     default False;
+  property Caption    : String       read FCaption     write SetCaption;
   property ModalResult: TModalResult read FModalResult write SetModalResult default mrNone;
  public
   destructor Destroy; override;
+  procedure Click; override;
 end;
 
 //TColouredMemo class - declarations +++++++++++++++++++++++++++++++++++++++++++
@@ -298,26 +301,42 @@ end;
 //Registry Class - declarations ++++++++++++++++++++++++++++++++++++++++++++++++
 type TGJHRegistry = class
  private
+//  {$IFNDEF Darwin}
   FRegistry : TRegistry;
+//  {$ENDIF}
   FRegKey   : String;
+//  {$IFNDEF Darwin}
   procedure OpenReg(key: String);
+//  {$ENDIF}
   function ExtractKey(var V: String):String;
+{  {$IFDEF Darwin}
+  procedure SetMacValue(V,X: String);
+  {$ENDIF}}
  published
   //Methods
   constructor Create(LRegKey: String);
-  function DeleteKey(key: String): Boolean;
   function DoesKeyExist(V: String):Boolean;
+//  {$IFNDEF Darwin}
+  function DeleteKey(key: String): Boolean;
   procedure GetRegValA(V: String;var D: array of Byte);
-  function GetRegValB(V: String;D: Boolean): Boolean;  
-  function GetRegValB(V: String): Boolean; overload;
-  function GetRegValI(V: String;D: Cardinal): Cardinal;
-  function GetRegValI(V: String): Cardinal; overload;
   function GetRegValS(V: String;D: String): String;
   function GetRegValS(V: String): String; overload;
+  function GetRegValB(V: String;D: Boolean): Boolean;
+  function GetRegValB(V: String): Boolean; overload;
+  function GetRegValI(V: String;D: Cardinal;CrNew: Boolean=True): Cardinal;
+  function GetRegValI(V: String): Cardinal; overload;
+{  {$ENDIF}
+  {$IFDEF Darwin}
+  procedure DeleteKey(key: String);
+  function GetRegValB(V: String;D: Boolean): Boolean;
+  function GetRegValI(V: String;D: Cardinal): Cardinal;
+  {$ENDIF}
+  {$IFNDEF Darwin}}
   procedure SetRegValA(V: String;var D: array of Byte);
+//  {$ENDIF}
+  procedure SetRegValS(V: String;D: String);
   procedure SetRegValB(V: String;D: Boolean);
   procedure SetRegValI(V: String;D: Cardinal);
-  procedure SetRegValS(V: String;D: String);
   //Properties
   property Key : String read FRegKey;
  public
@@ -336,11 +355,11 @@ Register all the components
 -------------------------------------------------------------------------------}
 procedure Register;
 begin
- RegisterComponents('GJH Custom Components',[TGJHTickBox,
-                                             TGJHRadioBox,
-                                             TGJHTickBoxes,
-                                             TGJHSlider,
-                                             TGJHButton,
+ RegisterComponents('GJH Custom Components',[TRISCOSTickBox,
+                                             TRISCOSRadioBox,
+                                             TRISCOSTickBoxes,
+                                             TRISCOSSlider,
+                                             TRISCOSButton,
                                              TColouredMemo]);
 end;
 
@@ -375,7 +394,7 @@ end;
 {-------------------------------------------------------------------------------
 Class creator - initialises the global variables
 -------------------------------------------------------------------------------}
-constructor TGJHTickBoxes.Create(AOwner: TComponent);
+constructor TRISCOSTickBoxes.Create(AOwner: TComponent);
 begin
  inherited Create(AOwner);
  //Set the default variables
@@ -392,7 +411,7 @@ end;
 {-------------------------------------------------------------------------------
 Class destructor - tidies up afterwards
 -------------------------------------------------------------------------------}
-destructor TGJHTickBoxes.Destroy;
+destructor TRISCOSTickBoxes.Destroy;
 begin
  FOn.Free;
  FOff.Free;
@@ -402,15 +421,12 @@ end;
 {-------------------------------------------------------------------------------
 Paint the control
 -------------------------------------------------------------------------------}
-procedure TGJHTickBoxes.Paint;
+procedure TRISCOSTickBoxes.Paint;
 var
  Lgf : TPortableNetworkGraphic;
  R   : TRect;
  Lcol: TColor;
 begin
- //Control enabled?
- Lcol:=Font.Color;
- if not Enabled then Font.Color:=$8E8E8E;
  //Create a temporary graphic
  Lgf:=TPortableNetworkGraphic.Create;
  //Set it's dimensions
@@ -439,15 +455,18 @@ begin
  R.Height:=Height;
  Canvas.StretchDraw(R,Lgf);
  Lgf.Free;
+ //Control enabled?
+ Lcol:=Canvas.Font.Color;
+ if not Enabled then Canvas.Font.Color:=$8E8E8E;
  //Write the text
  Canvas.TextOut(Height,(Height-Canvas.TextHeight(Caption))div 2,' '+FCaption);
- Font.Color:=LCol
+ Canvas.Font.Color:=LCol
 end;
 
 {-------------------------------------------------------------------------------
 React to the click
 -------------------------------------------------------------------------------}
-procedure TGJHTickBoxes.Click;
+procedure TRISCOSTickBoxes.Click;
 begin
  if not FExclusive then FTicked:=not FTicked else FTicked:=True;
  Invalidate;//Force a redraw
@@ -461,7 +480,7 @@ end;
 {-------------------------------------------------------------------------------
 If this is set, unset every other one
 -------------------------------------------------------------------------------}
-procedure TGJHTickBoxes.UnsetOthers;
+procedure TRISCOSTickBoxes.UnsetOthers;
 var
  LParent: TComponent;
  LGroup,
@@ -479,11 +498,11 @@ begin
     if(LParent.Components[Index]<>Self)
     and(LParent.Components[Index].ClassName=ClassName)then //But not other radios
     begin
-     if LParent.Components[Index] is TGJHRadioBox then
-      LGroup:=TGJHRadioBox(LParent.Components[Index]).Group
+     if LParent.Components[Index] is TRISCOSRadioBox then
+      LGroup:=TRISCOSRadioBox(LParent.Components[Index]).Group
      else LGroup:=FGroup;
      if LGroup=FGroup then //Ignore other groups
-      TGJHTickBoxes(LParent.Components[Index]).Ticked:=False; //Unset them
+      TRISCOSTickBoxes(LParent.Components[Index]).Ticked:=False; //Unset them
     end;
   end;
 end;
@@ -491,7 +510,7 @@ end;
 {-------------------------------------------------------------------------------
 Caption has changed, so adjust the dimensions
 -------------------------------------------------------------------------------}
-procedure TGJHTickBoxes.SetWidth(const LCaption: String);
+procedure TRISCOSTickBoxes.SetWidth(const LCaption: String);
 var Ltext: String;
 begin
  FCaption:=LCaption;
@@ -505,7 +524,7 @@ end;
 {-------------------------------------------------------------------------------
 The ticked state has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHTickBoxes.SetTicked(const LTicked: Boolean);
+procedure TRISCOSTickBoxes.SetTicked(const LTicked: Boolean);
 begin
  FTicked:=LTicked;
  Invalidate; //Force a redraw
@@ -521,7 +540,7 @@ end;
 {-------------------------------------------------------------------------------
 Class creator - initialises the local variables
 -------------------------------------------------------------------------------}
-constructor TGJHTickBox.Create(AOwner: TComponent);
+constructor TRISCOSTickBox.Create(AOwner: TComponent);
 var
  Lms: TMemoryStream;
 begin
@@ -542,7 +561,7 @@ end;
 {-------------------------------------------------------------------------------
 Free up and tidy up
 -------------------------------------------------------------------------------}
-destructor TGJHTickBox.Destroy;
+destructor TRISCOSTickBox.Destroy;
 begin
  inherited;
 end;
@@ -552,7 +571,7 @@ end;
 {-------------------------------------------------------------------------------
 Class creator - initialises the local variables
 -------------------------------------------------------------------------------}
-constructor TGJHRadioBox.Create(AOwner: TComponent);
+constructor TRISCOSRadioBox.Create(AOwner: TComponent);
 var
  Lms: TMemoryStream;
 begin
@@ -574,7 +593,7 @@ end;
 {-------------------------------------------------------------------------------
 Class destructor - tidy up
 -------------------------------------------------------------------------------}
-destructor TGJHRadioBox.Destroy;
+destructor TRISCOSRadioBox.Destroy;
 begin
  inherited;
 end;
@@ -584,7 +603,7 @@ end;
 {-------------------------------------------------------------------------------
 Class creator - initialises the local variables
 -------------------------------------------------------------------------------}
-constructor TGJHSlider.Create(AOwner: TComponent);
+constructor TRISCOSSlider.Create(AOwner: TComponent);
 begin
  inherited Create(AOwner);
  //Default values
@@ -615,7 +634,7 @@ end;
 {-------------------------------------------------------------------------------
 Destructor - tidy up
 -------------------------------------------------------------------------------}
-destructor TGJHSlider.Destroy;
+destructor TRISCOSSlider.Destroy;
 begin
  inherited;
 end;
@@ -623,7 +642,7 @@ end;
 {-------------------------------------------------------------------------------
 Paint the control
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.Paint;
+procedure TRISCOSSlider.Paint;
 var
  LUnit     : Real;
  LSliderSize,
@@ -634,7 +653,6 @@ var
  Lms       : TMemoryStream;
  Lpng      : TPortableNetworkGraphic;
  LR        : TRect;
- Lcol      : TColor;
  procedure GetGraphic(LGraphic: array of Byte);
  begin
   Lms.Clear;
@@ -643,9 +661,6 @@ var
   Lpng.LoadFromStream(Lms);
  end;
 begin
- //Control enabled?
- Lcol:=Font.Color;
- if not Enabled then Font.Color:=$8E8E8E;
  //Work out the position (centre of control)
  if FOrient=csVertical then
  begin
@@ -675,6 +690,7 @@ begin
  if LCaption<>'' then
  begin
   Canvas.Font:=Font;
+  if not Enabled then Canvas.Font.Color:=$8E8E8E;
   if FOrient=csVertical then
   begin
    LTX:=(Width-Canvas.GetTextWidth(LCaption))div 2;
@@ -690,6 +706,7 @@ begin
  if FCaption<>'' then
  begin
   Canvas.Font:=Font;
+  if not Enabled then Canvas.Font.Color:=$8E8E8E;
   if FOrient=csVertical then
   begin
    LTX:=(Width-Canvas.GetTextWidth(FCaption))div 2;
@@ -728,9 +745,15 @@ begin
                      OR Round((FColour>>16 AND$FF)*(Index/(FMax-FMin)))<<16;
     Canvas.Pen.Color:=Canvas.Brush.Color;
     if FOrient=csVertical then
-     Canvas.Rectangle(LX,LH-Ceil(LUnit*(Index-1)),LX+LSliderSize,LH-Ceil(LUnit*Index))
+     Canvas.Rectangle(LX,
+                      LH-Math.Ceil(LUnit*(Index-1)),
+                      LX+LSliderSize,
+                      LH-Math.Ceil(LUnit*Index))
     else
-     Canvas.Rectangle(LH+Ceil(LUnit*(Index-1)),LX,LH+Ceil(LUnit*Index),LX+LSliderSize);
+     Canvas.Rectangle(LH+Math.Ceil(LUnit*(Index-1)),
+                      LX,
+                      LH+Math.Ceil(LUnit*Index),
+                      LX+LSliderSize);
    end;
  end
  else //Solid fill
@@ -836,13 +859,12 @@ begin
   Lpng.Free;
   Lms.Free;
  end;
- Font.Color:=Lcol;
 end;
 
 {-------------------------------------------------------------------------------
 Position and/or step has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetPosition(const LPosition: Integer);
+procedure TRISCOSSlider.SetPosition(const LPosition: Integer);
 var
  LOldPosition: Integer;
 begin
@@ -864,7 +886,7 @@ end;
 {-------------------------------------------------------------------------------
 Step has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetStep(const LStep: Integer);
+procedure TRISCOSSlider.SetStep(const LStep: Integer);
 begin
  FStep:=LStep;
  //This is handled by the previous method
@@ -874,7 +896,7 @@ end;
 {-------------------------------------------------------------------------------
 The colour has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetColour(const LColour: TColor);
+procedure TRISCOSSlider.SetColour(const LColour: TColor);
 begin
  FColour:=LColour;
  Invalidate; //Force a redraw
@@ -884,7 +906,7 @@ end;
 {-------------------------------------------------------------------------------
 The suffix has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetSuffix(const LSuffix: String);
+procedure TRISCOSSlider.SetSuffix(const LSuffix: String);
 begin
  FSuffix:=LSuffix;
  Invalidate; //Force a redraw
@@ -894,7 +916,7 @@ end;
 {-------------------------------------------------------------------------------
 The caption has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetCaption(const LCaption: String);
+procedure TRISCOSSlider.SetCaption(const LCaption: String);
 begin
  FCaption:=LCaption;
  Invalidate; //Force a redraw
@@ -904,7 +926,7 @@ end;
 {-------------------------------------------------------------------------------
 The background colour has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetBackColour(const LBackColour: TColor);
+procedure TRISCOSSlider.SetBackColour(const LBackColour: TColor);
 begin
  FBackColour:=LBackColour;
  Invalidate; //Force a redraw
@@ -914,7 +936,7 @@ end;
 {-------------------------------------------------------------------------------
 The transparent setting has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetTransparent(const LTransparent: Boolean);
+procedure TRISCOSSlider.SetTransparent(const LTransparent: Boolean);
 begin
  FTransparent:=LTransparent;
  Invalidate; //Force a redraw
@@ -924,7 +946,7 @@ end;
 {-------------------------------------------------------------------------------
 The 3D Border setting has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.Set3DBorder(const L3DBorder: Boolean);
+procedure TRISCOSSlider.Set3DBorder(const L3DBorder: Boolean);
 begin
  F3DBorder:=L3DBorder;
  Invalidate; //Force a redraw
@@ -934,7 +956,7 @@ end;
 {-------------------------------------------------------------------------------
 The max has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetMax(const LMax: Integer);
+procedure TRISCOSSlider.SetMax(const LMax: Integer);
 begin
  //Ensure it is valid
  if LMax>FMin then FMax:=LMax;
@@ -946,7 +968,7 @@ end;
 {-------------------------------------------------------------------------------
 The min has been changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetMin(const LMin: Integer);
+procedure TRISCOSSlider.SetMin(const LMin: Integer);
 begin
  //Ensure it is valid
  if FMax>LMin then FMin:=LMin;
@@ -958,7 +980,7 @@ end;
 {-------------------------------------------------------------------------------
 The show value boolean has been toggled
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetShowValue(const LShowValue: Boolean);
+procedure TRISCOSSlider.SetShowValue(const LShowValue: Boolean);
 begin
  FShowValue:=LShowValue;
  Invalidate; //Force a redraw
@@ -968,7 +990,7 @@ end;
 {-------------------------------------------------------------------------------
 The show as Hex has been toggled
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetHexValue(const LHexValue: Boolean);
+procedure TRISCOSSlider.SetHexValue(const LHexValue: Boolean);
 begin
  FHexValue:=LHexValue;
  Invalidate; //Force a redraw
@@ -978,7 +1000,7 @@ end;
 {-------------------------------------------------------------------------------
 Orientation has changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetOrient(const LOrient: Integer);
+procedure TRISCOSSlider.SetOrient(const LOrient: Integer);
 begin
  if(LOrient=csHorizontal)or(LOrient=csVertical)then
  begin
@@ -991,7 +1013,7 @@ end;
 {-------------------------------------------------------------------------------
 Gradient has changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetGradient(const LGradient: Boolean);
+procedure TRISCOSSlider.SetGradient(const LGradient: Boolean);
 begin
  FGradient:=LGradient;
  Invalidate; //Force a redraw
@@ -1001,7 +1023,7 @@ end;
 {-------------------------------------------------------------------------------
 Showing pointers has changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetPointers(const LPointers: Boolean);
+procedure TRISCOSSlider.SetPointers(const LPointers: Boolean);
 begin
  FPointers:=LPointers;
  Invalidate; //Force a redraw
@@ -1011,7 +1033,7 @@ end;
 {-------------------------------------------------------------------------------
 Fill the slider has changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetFillSlider(const LFillSlider: Boolean);
+procedure TRISCOSSlider.SetFillSlider(const LFillSlider: Boolean);
 begin
  FFillSlider:=LFillSlider;
  Invalidate; //Force a redraw
@@ -1021,7 +1043,7 @@ end;
 {-------------------------------------------------------------------------------
 The outline setting has changed
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.SetOutline(const LOutline: Integer);
+procedure TRISCOSSlider.SetOutline(const LOutline: Integer);
 begin
  if(LOutline>=csOutNone)and(LOutline<=csOutBoth)then
  begin
@@ -1034,7 +1056,7 @@ end;
 {-------------------------------------------------------------------------------
 React to the Mouse Down
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.FDown(Sender: TObject; Button: TMouseButton;
+procedure TRISCOSSlider.FDown(Sender: TObject; Button: TMouseButton;
  Shift: TShiftState; X, Y: Integer);
 begin
  //Set the flag
@@ -1046,7 +1068,7 @@ end;
 {-------------------------------------------------------------------------------
 React to the Mouse Move
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.FMove(Sender: TObject; Shift: TShiftState; X,Y: Integer);
+procedure TRISCOSSlider.FMove(Sender: TObject; Shift: TShiftState; X,Y: Integer);
 var
  Lposition,
  LH,LY     : Integer;
@@ -1073,7 +1095,7 @@ end;
 {-------------------------------------------------------------------------------
 React to the Mouse Up
 -------------------------------------------------------------------------------}
-procedure TGJHSlider.FUp(Sender: TObject; Button: TMouseButton;
+procedure TRISCOSSlider.FUp(Sender: TObject; Button: TMouseButton;
 Shift: TShiftState; X, Y: Integer);
 begin
  //Clear the flag
@@ -1083,7 +1105,7 @@ end;
 {-------------------------------------------------------------------------------
 Get the height of the slider, taking into account the text
 -------------------------------------------------------------------------------}
-function TGJHSlider.GetSliderEnd: Integer;
+function TRISCOSSlider.GetSliderEnd: Integer;
 var
  LCaption : String;
 begin
@@ -1108,7 +1130,7 @@ end;
 {-------------------------------------------------------------------------------
 Returns a string representation of the value
 -------------------------------------------------------------------------------}
-function TGJHSlider.GetValue: String;
+function TRISCOSSlider.GetValue: String;
 var
  L: Byte;
 begin
@@ -1136,7 +1158,7 @@ end;
 {-------------------------------------------------------------------------------
 Work out where the top of the slider is
 -------------------------------------------------------------------------------}
-function TGJHSlider.GetSliderStart: Integer;
+function TRISCOSSlider.GetSliderStart: Integer;
 var
  LCaption : String;
  LTemp: Integer;
@@ -1165,7 +1187,7 @@ end;
 {-------------------------------------------------------------------------------
 Class creator - initialises the global variables
 -------------------------------------------------------------------------------}
-constructor TGJHButton.Create(AOwner: TComponent);
+constructor TRISCOSButton.Create(AOwner: TComponent);
 begin
  inherited Create(AOwner);
  //Set the default variables
@@ -1182,7 +1204,7 @@ end;
 {-------------------------------------------------------------------------------
 Class destructor - tidies up afterwards
 -------------------------------------------------------------------------------}
-destructor TGJHButton.Destroy;
+destructor TRISCOSButton.Destroy;
 begin
  inherited;
 end;
@@ -1190,7 +1212,7 @@ end;
 {-------------------------------------------------------------------------------
 Paint the control
 -------------------------------------------------------------------------------}
-procedure TGJHButton.Paint;
+procedure TRISCOSButton.Paint;
 var
  LX,LY   : Integer;
  LCol    : TColor;
@@ -1248,9 +1270,9 @@ begin
  if FCaption<>'' then
  begin
   //Remember the current colour
-  LCol:=Font.Color;
+  LCol:=Canvas.Font.Color;
   //Change if disabled
-  if not Enabled then Font.Color:=$8E8E8E;
+  if not Enabled then Canvas.Font.Color:=$8E8E8E;
   //Find the centred position
   LX:=(Width-Canvas.GetTextWidth(FCaption))div 2;
   LY:=(Height-Canvas.GetTextHeight(FCaption))div 2;
@@ -1258,14 +1280,14 @@ begin
   Canvas.Brush.Style:=bsClear;
   Canvas.TextOut(LX,LY,FCaption);
   //Change the colour back
-  Font.Color:=LCol;
+  Canvas.Font.Color:=LCol;
  end;
 end;
 
 {-------------------------------------------------------------------------------
 React to the mouse down
 -------------------------------------------------------------------------------}
-procedure TGJHButton.FDown(Sender: TObject; Button: TMouseButton;
+procedure TRISCOSButton.FDown(Sender: TObject; Button: TMouseButton;
                             Shift: TShiftState; X, Y: Integer);
 begin
  FPushed:=True;
@@ -1276,29 +1298,37 @@ end;
 {-------------------------------------------------------------------------------
 React to the mouse up
 -------------------------------------------------------------------------------}
-procedure TGJHButton.FUp(Sender: TObject; Button: TMouseButton;
+procedure TRISCOSButton.FUp(Sender: TObject; Button: TMouseButton;
                             Shift: TShiftState; X, Y: Integer);
-var
- Lctrl: TWinControl;
 begin
  FPushed:=False;
  Invalidate;
  Update;
+end;
+
+{-------------------------------------------------------------------------------
+The click procedure
+-------------------------------------------------------------------------------}
+procedure TRISCOSButton.Click;
+var
+ Lctrl: TCustomForm;
+begin
  if Assigned(FOnClick) then FOnClick(Self as TObject);
- if HasParent then
+ if ModalResult<>mrNone then
  begin
-  Lctrl:=Parent;
-  repeat
-   if Lctrl.HasParent then Lctrl:=Lctrl.Parent;
-  until(Lctrl is TForm)or(not Lctrl.HasParent);
-  if Lctrl is TForm then TForm(Lctrl).ModalResult:=FModalResult;
+  Lctrl:=GetParentForm(Self);
+  if Lctrl<>nil then
+  begin
+   Lctrl.ModalResult:=FModalResult;
+   Lctrl.Hide;
+  end;
  end;
 end;
 
 {-------------------------------------------------------------------------------
 The 'default' setting has changed
 -------------------------------------------------------------------------------}
-procedure TGJHButton.SetDefault(const LDefault: Boolean);
+procedure TRISCOSButton.SetDefault(const LDefault: Boolean);
 begin
  FDefault:=LDefault;
  SetDimensions;
@@ -1309,7 +1339,7 @@ end;
 {-------------------------------------------------------------------------------
 The caption has changed
 -------------------------------------------------------------------------------}
-procedure TGJHButton.SetCaption(const LCaption: String);
+procedure TRISCOSButton.SetCaption(const LCaption: String);
 begin
  FCaption:=LCaption;
  Invalidate;
@@ -1319,7 +1349,7 @@ end;
 {-------------------------------------------------------------------------------
 Set the dimensions
 -------------------------------------------------------------------------------}
-procedure TGJHButton.SetDimensions;
+procedure TRISCOSButton.SetDimensions;
 var
  w,h: Integer;
 begin
@@ -1332,7 +1362,7 @@ end;
 {-------------------------------------------------------------------------------
 The modal result has changed
 -------------------------------------------------------------------------------}
-procedure TGJHButton.SetModalResult(const LModalResult: TModalResult);
+procedure TRISCOSButton.SetModalResult(const LModalResult: TModalResult);
 begin
  FModalResult:=LModalResult;
 end;
@@ -1585,6 +1615,9 @@ var
   else PrintText(wtText);//No text wrapping
  end;
 begin
+ LRed:=0;
+ LGreen:=0;
+ LBlue:=0;
  //Set the font
  FContent.Canvas.Font:=Font;
  //Starting size
@@ -1764,30 +1797,43 @@ end;
 {-------------------------------------------------------------------------------
 Open the registry key
 -------------------------------------------------------------------------------}
+//{$IFNDEF Darwin}
 procedure TGJHRegistry.OpenReg(key: String);
 begin
  FRegistry:=TRegistry.Create;
  if key<>'' then key:='\'+key;
  FRegistry.OpenKey(FRegKey+key,true);
 end;
+//{$ENDIF}
 
 {-------------------------------------------------------------------------------
 Function to delete a key from the registry
 -------------------------------------------------------------------------------}
+{{$IFDEF Darwin}
+procedure TGJHRegistry.DeleteKey(key: String); 
+{$ENDIF}
+{$IFNDEF Darwin}}
 function TGJHRegistry.DeleteKey(key: String): Boolean;
 var
  x: Boolean;
+//{$ENDIF}
 begin
+//{$IFNDEF Darwin}
  x:=True;
  OpenReg(ExtractKey(key));
  if FRegistry.ValueExists(key) then x:=FRegistry.DeleteValue(key);
  FRegistry.Free;
  Result:=x;
+{{$ENDIF}
+{$IFDEF Darwin}
+ SetMacValue(key,NULL{%H-});
+{$ENDIF}}
 end;
 
 {-------------------------------------------------------------------------------
 Function to read a string from the registry, or create it if it doesn't exist
 -------------------------------------------------------------------------------}
+//{$IFNDEF Darwin}
 function TGJHRegistry.GetRegValS(V: String;D: String): String;
 var
  X: String;
@@ -1807,10 +1853,12 @@ begin
  FRegistry.Free;
  Result:=X;
 end;
+//{$ENDIF}
 
 {-------------------------------------------------------------------------------
 Function to read an array from the registry, or create it if it doesn't exist
 -------------------------------------------------------------------------------}
+//{$IFNDEF Darwin}
 procedure TGJHRegistry.GetRegValA(V: String;var D: array of Byte);
 var
  s: Integer;
@@ -1827,33 +1875,48 @@ begin
  end;
  FRegistry.Free;
 end;
+//{$ENDIF}
 
 {-------------------------------------------------------------------------------
 Function to read an integer from the registry, or create it if it doesn't exist
--------------------------------------------------------------------------------}
-function TGJHRegistry.GetRegValI(V: String;D: Cardinal): Cardinal;
+-------------------------------------------------------------------------------}  
+//{$IFNDEF Darwin}
+function TGJHRegistry.GetRegValI(V: String;D: Cardinal;CrNew: Boolean=True): Cardinal;
 var
  X: Cardinal;
 begin
  OpenReg(ExtractKey(V));
  If FRegistry.ValueExists(V)then X:=FRegistry.ReadInteger(V)
- else begin X:=D;FRegistry.WriteInteger(V,X);end;
+ else
+ begin
+  X:=D;
+  if CrNew then FRegistry.WriteInteger(V,X);
+ end;
  FRegistry.Free;
  Result:=X;
 end;
+{The same as above, but doesn't create it}
 function TGJHRegistry.GetRegValI(V: String): Cardinal;
+begin
+ Result:=GetRegValI(V,0,False);
+end;
+{{$ENDIF}
+function TGJHRegistry.GetRegValI(V: String;D: Cardinal): Cardinal;
 var
  X: Cardinal;
+ IsValid: Boolean;
 begin
- OpenReg(ExtractKey(V));
- If FRegistry.ValueExists(V)then X:=FRegistry.ReadInteger(V) else X:=0;
- FRegistry.Free;
- Result:=X;
-end;
+ IsValid:=False;
+ X:=CFPreferencesGetAppIntegerValue(CFStr(PChar(ExtractKey(V)))
+                                   ,kCFPreferencesCurrentApplication
+                                   ,IsValid);
+ if IsValid then Result:=X else Result:=D;
+end; }
 
 {-------------------------------------------------------------------------------
 Function to read a boolean from the registry, or create it if it doesn't exist
 -------------------------------------------------------------------------------}
+//{$IFNDEF Darwin}
 function TGJHRegistry.GetRegValB(V: String;D: Boolean): Boolean;
 var
  X: Boolean;
@@ -1873,15 +1936,37 @@ begin
  FRegistry.Free;
  Result:=X;
 end;
+{{$ENDIF}
+{$IFDEF Darwin}
+function TGJHRegistry.GetRegValB(V: String;D: Boolean): Boolean;
+var
+ X      : Int64;
+ IsValid: Boolean;
+begin
+ IsValid:=False;
+ X:=CFPreferencesGetAppIntegerValue(CFStr(PChar(ExtractKey(V)))
+                                   ,kCFPreferencesCurrentApplication
+                                   ,IsValid);
+ if IsValid then Result:=X<>0 else Result:=D;
+end;
+{$ENDIF}  }
 
 {-------------------------------------------------------------------------------
 Does the specified key exist?
 -------------------------------------------------------------------------------}
 function TGJHRegistry.DoesKeyExist(V: String):Boolean;
 begin
+//{$IFNDEF Darwin}
  OpenReg(ExtractKey(V));
  Result:=FRegistry.ValueExists(V);
  FRegistry.Free;
+{{$ENDIF}
+{$IFDEF Darwin}
+ Result:=False;
+ CFPreferencesGetAppIntegerValue(CFStr(PChar(ExtractKey(V)))
+                                ,kCFPreferencesCurrentApplication
+                                ,Result);
+{$ENDIF}}
 end;
 
 {-------------------------------------------------------------------------------
@@ -1889,29 +1974,41 @@ Function to save a string to the registry
 -------------------------------------------------------------------------------}
 procedure TGJHRegistry.SetRegValS(V: String;D: String);
 begin
+//{$IFNDEF Darwin}
  OpenReg(ExtractKey(V));
  FRegistry.WriteString(V,D);
  FRegistry.Free;
+{{$ENDIF}
+{$IFDEF Darwin}
+ SetMacValue(V,D);
+{$ENDIF}}
 end;
 
 {-------------------------------------------------------------------------------
 Function to save an array to the registry
 -------------------------------------------------------------------------------}
+//{$IFNDEF Darwin}
 procedure TGJHRegistry.SetRegValA(V: String;var D: array of Byte);
 begin
  OpenReg(ExtractKey(V));
  FRegistry.WriteBinaryData(V,D,SizeOf(D));
  FRegistry.Free;
 end;
+//{$ENDIF}
 
 {-------------------------------------------------------------------------------
 Function to save an integer to the registry
 -------------------------------------------------------------------------------}
 procedure TGJHRegistry.SetRegValI(V: String;D: Cardinal);
 begin
+//{$IFNDEF Darwin}
  OpenReg(ExtractKey(V));
  FRegistry.WriteInteger(V,D);
  FRegistry.Free;
+{{$ENDIF}
+{$IFDEF Darwin}
+ SetMacValue(V,IntToStr(D));
+{$ENDIF}}
 end;
 
 {-------------------------------------------------------------------------------
@@ -1919,9 +2016,14 @@ Function to save a boolean to the registry
 -------------------------------------------------------------------------------}
 procedure TGJHRegistry.SetRegValB(V: String;D: Boolean);
 begin
+//{$IFNDEF Darwin}
  OpenReg(ExtractKey(V));
  FRegistry.WriteBool(V,D);
  FRegistry.Free;
+{{$ENDIF}
+{$IFDEF Darwin}
+ if D then SetMacValue(V,'1') else SetMacValue(V,'0');
+{$ENDIF}}
 end;
 
 {-------------------------------------------------------------------------------
@@ -1936,5 +2038,24 @@ begin
   V:=Copy(V,Pos('\',V)+1);
  end;
 end;
+
+{-------------------------------------------------------------------------------
+Procedure to write a Mac preference
+-------------------------------------------------------------------------------}
+{{$IFDEF Darwin}
+procedure TGJHRegistry.SetMacValue(V,X: String);
+var
+ ItemVal : CFPropertyListRef;
+begin
+ ItemVal:=CFStringCreateWithPascalString(kCFAllocatorDefault
+                                        ,X
+                                        ,kCFStringEncodingUTF8);
+ CFPreferencesSetAppValue(CFStr(PChar(ExtractKey(V))),
+                          ItemVal,
+                          kCFPreferencesCurrentApplication);
+ // write out the preference data
+ CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
+end;
+{$ENDIF} }
 
 end.
