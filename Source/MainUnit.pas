@@ -6,17 +6,15 @@ interface
 
 uses
  Classes, SysUtils, Forms, Controls, ExtCtrls, GJHCustomComponents, Dialogs,
- Graphics, StdCtrls, Buttons;
+ Graphics, StdCtrls, Buttons, ComCtrls;
 
  { TMainForm }
 
  type
  TMainForm = class(TForm)
-  Title: TLabel;
-  RCap: TImage;
-  MidB: TImage;
-  MidT: TImage;
-  LCap: TImage;
+  Label1:TLabel;
+  Panel1:TPanel;
+  Background: TImage;
   Texture: TImage;
   ColourMix: TShape;
   procedure CheckBox1Change(Sender: TObject);
@@ -26,22 +24,23 @@ uses
   procedure FormShow(Sender: TObject);
   procedure Image2Click(Sender: TObject);
   procedure Panel1Click(Sender: TObject);
+  procedure Panel1Paint(Sender:TObject);
   procedure TileCanvas(c: TCanvas);
- private
-
  public
-  TickBox1    : TGJHTickBox;
-  RedSlider   : TGJHSlider;
-  GreenSlider : TGJHSlider;
-  BlueSlider  : TGJHSlider;
-  HSlider     : TGJHSlider;
-  RadioBox1   : TGJHRadioBox;
-  RadioBox2   : TGJHRadioBox;
-  RadioBox3   : TGJHRadioBox;
-  DefaultBtn  : TGJHButton;
-  NormalBtn   : TGJHButton;  
-  DefaultBtn1 : TGJHButton;
-  NormalBtn1  : TGJHButton;
+  TickBox1    : TRISCOSTickBox;
+  TickBox2    : TRISCOSTickBox;
+  RedSlider   : TRISCOSSlider;
+  GreenSlider : TRISCOSSlider;
+  BlueSlider  : TRISCOSSlider;
+  HSlider     : TRISCOSSlider;
+  Fader       : TRISCOSSlider;
+  RadioBox1   : TRISCOSRadioBox;
+  RadioBox2   : TRISCOSRadioBox;
+  RadioBox3   : TRISCOSRadioBox;
+  DefaultBtn  : TRISCOSButton;
+  NormalBtn   : TRISCOSButton;  
+  DefaultBtn1 : TRISCOSButton;
+  NormalBtn1  : TRISCOSButton;
  end;
 
 var
@@ -57,7 +56,7 @@ procedure TMainForm.FormShow(Sender: TObject);
 begin
  Caption:='GJH Custom Components V'+GJHVersion;
  //RISC OS style tick box
- TickBox1:=TGJHTickBox.Create(MainForm as TControl);
+ TickBox1:=TRISCOSTickBox.Create(MainForm as TControl);
  TickBox1.Parent:=MainForm as TWinControl;
  TickBox1.Visible:=True;
  TickBox1.Caption:='Display values in hex';
@@ -65,10 +64,19 @@ begin
  TickBox1.Left:=Round(10*(PixelsPerInch/DesignTimePPI));
  TickBox1.Name:='ROTickbox';
  TickBox1.OnChange:=@CheckBox1Change;
+ //RISC OS style tick box
+ TickBox2:=TRISCOSTickBox.Create(MainForm as TControl);
+ TickBox2.Parent:=MainForm as TWinControl;
+ TickBox2.Visible:=True;
+ TickBox2.Caption:='Display values in dec';
+ TickBox2.Top:=Round(10*(PixelsPerInch/DesignTimePPI));
+ TickBox2.Left:=TickBox1.Left+TickBox1.Width;
+ TickBox2.Name:='ROTickbox2';
+// TickBox2.OnChange:=@CheckBox1Change;
  //Move the colour box
  ColourMix.Top:=TickBox1.Top+TickBox1.Height+Round(4*(PixelsPerInch/DesignTimePPI));
  //Sliders - Red
- RedSlider:=TGJHSlider.Create(MainForm as TComponent);
+ RedSlider:=TRISCOSSlider.Create(MainForm as TComponent);
  RedSlider.Parent:=MainForm as TWinControl;
  RedSlider.Visible:=True;
  RedSlider.Top:=ColourMix.Top+ColourMix.Height+Round(4*(PixelsPerInch/DesignTimePPI));
@@ -84,7 +92,7 @@ begin
  RedSlider.Name:='RedSlider';
  RedSlider.OnChange:=@CheckBox1Change;
  //Sliders - Green
- GreenSlider:=TGJHSlider.Create(MainForm as TComponent);
+ GreenSlider:=TRISCOSSlider.Create(MainForm as TComponent);
  GreenSlider.Parent:=MainForm as TWinControl;
  GreenSlider.Visible:=True;
  GreenSlider.Top:=ColourMix.Top+ColourMix.Height+Round(4*(PixelsPerInch/DesignTimePPI));
@@ -104,7 +112,7 @@ begin
  GreenSlider.Border3D:=True;
  GreenSlider.Outline:=csOutNone;
  //Sliders - Blue
- BlueSlider:=TGJHSlider.Create(MainForm as TComponent);
+ BlueSlider:=TRISCOSSlider.Create(MainForm as TComponent);
  BlueSlider.Parent:=MainForm as TWinControl;
  BlueSlider.Visible:=True;
  BlueSlider.Top:=ColourMix.Top+ColourMix.Height+Round(4*(PixelsPerInch/DesignTimePPI));
@@ -121,7 +129,7 @@ begin
  BlueSlider.OnChange:=@CheckBox1Change;
  BlueSlider.Gradient:=True;
  //Sliders - Horizontal
- HSlider:=TGJHSlider.Create(MainForm as TComponent);
+ HSlider:=TRISCOSSlider.Create(MainForm as TComponent);
  HSlider.Parent:=MainForm as TWinControl;
  HSlider.Visible:=True;
  HSlider.Top:=ColourMix.Top;
@@ -140,8 +148,33 @@ begin
  HSlider.Pointers:=False;
  HSlider.Outline:=csOutInner;
  HSlider.Suffix:='K';
+ //Sliders - Fader
+ Fader:=TRISCOSSlider.Create(MainForm as TComponent);
+ Fader.Parent:=MainForm as TWinControl;
+ Fader.Visible:=True;
+ Fader.Top:=Round(8*(PixelsPerInch/DesignTimePPI));
+ Fader.Left:=Round(10*(PixelsPerInch/DesignTimePPI))+Panel1.Left+Panel1.Width;
+ Fader.Colour:=$000000;
+ Fader.Max:=600;
+ Fader.Min:=-180;
+ Fader.Position:=0;
+ Fader.Pointers:=True;
+ Fader.Faders:=True;
+ Fader.FaderColour:=csRed;
+ Fader.GradColour:=$FF0000;
+ Fader.FillSlider:=True;
+ Fader.Width:=Round(60*(PixelsPerInch/DesignTimePPI));
+ Fader.Height:=Height-Fader.Top-Round(8*(PixelsPerInch/DesignTimePPI));
+ Fader.HexValue:=False;
+ Fader.ValueDiv:=10;
+ Fader.Suffix:='dB';
+ Fader.Caption:='Input #12';
+ Fader.ShowValue:=True;
+ Fader.Name:='Fader';
+ Fader.Border3D:=True;
+ Fader.Outline:=csOutNone;
  //Radio options
- RadioBox1:=TGJHRadioBox.Create(MainForm as TControl);
+ RadioBox1:=TRISCOSRadioBox.Create(MainForm as TControl);
  RadioBox1.Parent:=MainForm as TWinControl;
  RadioBox1.Visible:=True;
  RadioBox1.Caption:='Red';
@@ -150,7 +183,7 @@ begin
  RadioBox1.Name:='RORadioBox1';
  RadioBox1.Ticked:=True;
  //
- RadioBox2:=TGJHRadioBox.Create(MainForm as TControl);
+ RadioBox2:=TRISCOSRadioBox.Create(MainForm as TControl);
  RadioBox2.Parent:=MainForm as TWinControl;
  RadioBox2.Visible:=True;
  RadioBox2.Caption:='Green';
@@ -158,7 +191,7 @@ begin
  RadioBox2.Left:=HSlider.Left;
  RadioBox2.Name:='RORadioBox2';
  //
- RadioBox3:=TGJHRadioBox.Create(MainForm as TControl);
+ RadioBox3:=TRISCOSRadioBox.Create(MainForm as TControl);
  RadioBox3.Parent:=MainForm as TWinControl;
  RadioBox3.Visible:=True;
  RadioBox3.Caption:='Blue';
@@ -166,7 +199,7 @@ begin
  RadioBox3.Left:=HSlider.Left;
  RadioBox3.Name:='RORadioBox3';
  //
- DefaultBtn:=TGJHButton.Create(MainForm as TControl);
+ DefaultBtn:=TRISCOSButton.Create(MainForm as TControl);
  DefaultBtn.Parent:=MainForm as TWinControl;
  DefaultBtn.Visible:=True;
  DefaultBtn.Default:=True;
@@ -175,7 +208,7 @@ begin
  DefaultBtn.Left:=RadioBox3.Left;
  DefaultBtn.OnClick:=@Panel1Click;
  //
- NormalBtn:=TGJHButton.Create(MainForm as TControl);
+ NormalBtn:=TRISCOSButton.Create(MainForm as TControl);
  NormalBtn.Parent:=MainForm as TWinControl;
  NormalBtn.Visible:=True;
  NormalBtn.Default:=False;
@@ -184,7 +217,7 @@ begin
  NormalBtn.Left:=DefaultBtn.Left+DefaultBtn.Width+Round(8*(PixelsPerInch/DesignTimePPI));
  NormalBtn.OnClick:=@Image2Click;
  //
- DefaultBtn1:=TGJHButton.Create(MainForm as TControl);
+ DefaultBtn1:=TRISCOSButton.Create(MainForm as TControl);
  DefaultBtn1.Parent:=MainForm as TWinControl;
  DefaultBtn1.Visible:=True;
  DefaultBtn1.Default:=True;
@@ -193,7 +226,7 @@ begin
  DefaultBtn1.Left:=RadioBox3.Left;
  DefaultBtn1.Enabled:=False;
  //
- NormalBtn1:=TGJHButton.Create(MainForm as TControl);
+ NormalBtn1:=TRISCOSButton.Create(MainForm as TControl);
  NormalBtn1.Parent:=MainForm as TWinControl;
  NormalBtn1.Visible:=True;
  NormalBtn1.Default:=False;
@@ -217,6 +250,19 @@ begin
  //Caption:='OK Clicked';
 end;
 
+procedure TMainForm.Panel1Paint(Sender:TObject);
+var
+// b : TBrush;
+ rc: TRect;
+begin
+ rc:=Rect(0,0,Panel1.Canvas.Width,Panel1.Canvas.Height);
+{ b:=Tbrush.Create;
+ b.Bitmap:=Background.Picture.Bitmap;
+ Panel1.Canvas.Brush:=b;}
+ Panel1.Canvas.StretchDraw(rc,Background.Picture.Graphic);
+// b.Free;
+end;
+
 procedure TMainForm.CheckBox1Change(Sender: TObject);
 begin
  RedSlider.HexValue   :=TickBox1.Ticked;
@@ -225,6 +271,7 @@ begin
  ColourMix.Brush.Color:=BlueSlider.Position<<16
                        +GreenSlider.Position<<8
                        +RedSlider.Position;
+ TickBox2.Ticked:=not TickBox1.Ticked;
 end;
 
 procedure TMainForm.FormActivate(Sender: TObject);

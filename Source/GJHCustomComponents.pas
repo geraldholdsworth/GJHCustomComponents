@@ -1,8 +1,8 @@
 unit GJHCustomComponents;
 
 {
-GJH Custom Components V1.08
-Copyright (C) 2024 Gerald Holdsworth gerald@hollypops.co.uk
+GJH Custom Components V1.09
+Copyright (C) 2024-2025 Gerald Holdsworth gerald@hollypops.co.uk
 
 This source is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public Licence as published by the Free
@@ -34,13 +34,7 @@ uses
 
 //Global constants
 const
- csHorizontal           = 0;
- csVertical             = 1;
- csOutNone              = 0;
- csOutInner             = 1;
- csOutOuter             = 2;
- csOutBoth              = 3;
- GJHVersion             = '1.08';
+ GJHVersion             = '1.09';
  cmColBlack             = #$81#$00#$00#$00;
  cmColRed               = #$81#$00#$00#$FF;
  cmColGreen             = #$81#$00#$FF#$00;
@@ -77,9 +71,19 @@ const
  cmBoldItalicStrikeUnder= #$85#$0F;
  cmResetStyle           = #$86;
 
+//RISC OS style control parent class - declarations ++++++++++++++++++++++++++++
+type
+ TRISCOSControl = class(TGraphicControl)
+ private
+  FOnChange  : TNotifyEvent;
+  procedure ForceRedraw;
+ published
+  property OnChange: TNotifyEvent read FOnChange  write FOnChange;
+ end;
+
 //RISC OS style tick boxes - declarations ++++++++++++++++++++++++++++++++++++++
 type
- TRISCOSTickBoxes = class(TGraphicControl)
+ TRISCOSTickBoxes = class(TRISCOSControl)
  private
   FExclusive,
   FOnlyMouse,
@@ -87,7 +91,6 @@ type
   FGroup     : Integer;
   FOn,
   FOff       : TPortableNetworkGraphic;
-  FOnChange  : TNotifyEvent;
   FCaption   : String;
   FColour    : TColor;
   procedure SetWidth(const LCaption: String);
@@ -99,8 +102,6 @@ type
  published
   //Methods
   constructor Create(AOwner: TComponent); override;
-  //Events
-  property OnChange: TNotifyEvent read FOnChange  write FOnChange;
   //Properties
   property Caption:  String       read FCaption   write SetWidth;
   property Colour:   TColor       read FColour    write FColour    default clNone;
@@ -138,9 +139,13 @@ type
 end;
 
 //Coloured Slider - declarations +++++++++++++++++++++++++++++++++++++++++++++++
-type TRISCOSSlider = class(TGraphicControl)
+type TFaderColour=(csRed,csGreen,csBlue,csYellow,csBlack,csWhite);
+type TOrientation=(csHorizontal,csVertical);
+type TOuterBorder=(csOutNone,csOutInner,csOutOuter,csOutBoth);
+type TRISCOSSlider = class(TRISCOSControl)
  private
   FBackColour,
+  FGradColour,
   FColour      : TColor;
   F3DBorder,
   FTransparent,
@@ -149,17 +154,21 @@ type TRISCOSSlider = class(TGraphicControl)
   FHexValue,
   FGradient,
   FPointers,
+  FFaders,
+  FFaderGrads,
   FFillSlider  : Boolean;
-  FOutline,
+  FOutline     : TOuterBorder;
+  FFaderSize,
   FPosition,
   FMax,
   FMin,
-  FOrient,
   FBorderSize,
   FStep        : Integer;
-  FOnChange    : TNotifyEvent;
+  FValueDiv    : Byte;
   FSuffix,
   FCaption     : String;
+  FOrient      : TOrientation;
+  FFaderColour : TFaderColour;
   procedure SetPosition(const LPosition: Integer);
   procedure SetStep(const LStep: Integer);
   procedure SetColour(const LColour: TColor);
@@ -167,16 +176,21 @@ type TRISCOSSlider = class(TGraphicControl)
   procedure SetMin(const LMin: Integer);
   procedure SetShowValue(const LShowValue: Boolean);
   procedure SetHexValue(const LHexValue: Boolean);
-  procedure SetOrient(const LOrient: Integer);
+  procedure SetOrient(const LOrient: TOrientation);
   procedure SetGradient(const LGradient: Boolean);
   procedure SetPointers(const LPointers: Boolean);
+  procedure SetFaders(const LFaders: Boolean);
+  procedure SetFaderGrads(const LFaderGrads: Boolean);
+  procedure SetFaderColour(const LFaderColour: TFaderColour);
   procedure SetFillSlider(const LFillSlider: Boolean);
-  procedure SetOutline(const LOutline: Integer);
+  procedure SetOutline(const LOutline: TOuterBorder);
   procedure SetSuffix(const LSuffix: String);
   procedure SetCaption(const LCaption: String);
   procedure SetBackColour(const LBackColour: TColor);
   procedure SetTransparent(const LTransparent: Boolean);
   procedure Set3DBorder(const L3DBorder: Boolean);
+  procedure SetValueDiv(const LValueDiv: Byte);
+  procedure SetGradColour(const LGradColour: TColor);
   function GetSliderEnd: Integer;
   function GetValue: String;
   function GetSliderStart: Integer;
@@ -187,32 +201,58 @@ type TRISCOSSlider = class(TGraphicControl)
                               {%H-}Shift: TShiftState; {%H-}X, {%H-}Y: Integer);
  const
 {$INCLUDE 'PointerGraphics.pas'}
+{$INCLUDE 'FaderGraphics.pas'}
   FGap = 4;
  protected
   procedure Paint; override;
  published
   //Methods
   constructor Create(AOwner: TComponent); override;
-  //Events
-  property OnChange   : TNotifyEvent read FOnChange    write FOnChange;
   //Properties
+           //Background colour of the control, unless transparent
   property BackColour : TColor       read FBackColour  write SetBackColour  default $FFFFFF;
+           //Use a RISC OS style 3D border
   property Border3D   : Boolean      read F3DBorder    write Set3DBorder    default False;
+           //Text to print at the top of the control
   property Caption    : string       read FCaption     write SetCaption;
+           //Colour of the slider fill
   property Colour     : TColor       read FColour      write SetColour      default $0000FF;
+           //Make it a fader, rather than a slider
+  property Faders     : Boolean      read FFaders      write SetFaders      default False;
+           //Colour of the fader 'knob'
+  property FaderColour: TFaderColour read FFaderColour write SetFaderColour default csBlack;
+           //Show graduations with a fader
+  property FaderGrads : Boolean      read FFaderGrads  write SetFaderGrads  default True;
+           //Fill the slider all the way, or just to the position
   property FillSlider : Boolean      read FFillSlider  write SetFillSlider  default False;
+           //Colour of the graduations on the fader
+  property GradColour : TColor       read FGradColour  write SetGradColour  default $000000;
+           //Slider colour is a gradient fill
   property Gradient   : Boolean      read FGradient    write SetGradient    default False;
+           //Print the value at the bottom as a hex value
   property HexValue   : Boolean      read FHexValue    write SetHexValue    default False;
+           //Maximum value
   property Max        : Integer      read FMax         write SetMax         default 100;
+           //Minimum value
   property Min        : Integer      read FMin         write SetMin         default 0;
-  property Orientation: Integer      read FOrient      write SetOrient      default csVertical;
-  property Outline    : Integer      read FOutline     write SetOutline     default csOutOuter;
+           //How to orient the control - faders can only be vertical
+  property Orientation: TOrientation read FOrient      write SetOrient      default csVertical;
+           //What outlines to print - inside, outside or both
+  property Outline    : TOuterBorder read FOutline     write SetOutline     default csOutOuter;
+           //Show the pointers? Set this and Faders to true for faders
   property Pointers   : Boolean      read FPointers    write SetPointers    default True;
+           //Current position
   property Position   : Integer      read FPosition    write SetPosition    default 0;
+           //Print the value at the bottom
   property ShowValue  : Boolean      read FShowValue   write SetShowValue   default False;
+           //Step size between values
   property Step       : Integer      read FStep        write SetStep        default 1;
+           //Suffix to add after the value
   property Suffix     : string       read FSuffix      write SetSuffix;
+           //Background is transparent
   property Transparent: Boolean      read FTransparent write SetTransparent default True;
+           //What to divide the value by to get the actual value (printed only)
+  property ValueDiv   : Byte         read FValueDiv    write SetValueDiv    default 1;
  public
   destructor Destroy; override;
 end;
@@ -368,8 +408,8 @@ Parse a CSV line into an array
 -------------------------------------------------------------------------------}
 function ParseCSVLine(Line: String): TStringArray;
 var
- Index: Integer;
- PLine: PChar;
+ Index: Integer=0;
+ PLine: PChar='';
 begin
  Result:=nil;
  //If not blank
@@ -389,6 +429,17 @@ begin
  end;
 end;
 
+//RISC OS Control parent Methods +++++++++++++++++++++++++++++++++++++++++++++++
+
+{-------------------------------------------------------------------------------
+Force a redraw of the control
+-------------------------------------------------------------------------------}
+procedure TRISCOSControl.ForceRedraw;
+begin
+ Invalidate;
+ Update;
+end;
+
 //Tickbox parent Methods +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 {-------------------------------------------------------------------------------
@@ -398,14 +449,14 @@ constructor TRISCOSTickBoxes.Create(AOwner: TComponent);
 begin
  inherited Create(AOwner);
  //Set the default variables
- FTicked:=False;
- FColour:=clNone;
+ FTicked   :=False;
+ FColour   :=clNone;
  FOnlyMouse:=False;
 // Height:=Canvas.GetTextHeight(' ');
 // Width:=Height+Canvas.GetTextWidth(' ')+4;
  //Create the on and off graphics
- FOn:=TPortableNetworkGraphic.Create;
- FOff:=TPortableNetworkGraphic.Create;
+ FOn       :=TPortableNetworkGraphic.Create;
+ FOff      :=TPortableNetworkGraphic.Create;
 end;
 
 {-------------------------------------------------------------------------------
@@ -423,35 +474,35 @@ Paint the control
 -------------------------------------------------------------------------------}
 procedure TRISCOSTickBoxes.Paint;
 var
- Lgf : TPortableNetworkGraphic;
- R   : TRect;
- Lcol: TColor;
+ Lgf : TPortableNetworkGraphic=nil;
+ R   : TRect=();
+ Lcol: TColor=0;
 begin
  //Create a temporary graphic
- Lgf:=TPortableNetworkGraphic.Create;
+ Lgf       :=TPortableNetworkGraphic.Create;
  //Set it's dimensions
- Lgf.Width:=FOn.Width;
+ Lgf.Width :=FOn.Width;
  Lgf.Height:=FOn.Height;
  //Colour the background, if one has been specified
  if FColour=clNone then
  begin
   Canvas.Brush.Style:=bsClear;
-  Canvas.Pen.Style:=psClear;
+  Canvas.Pen.Style  :=psClear;
  end
  else
  begin
   Canvas.Brush.Color:=FColour;
   Canvas.Brush.Style:=bsSolid;
-  Canvas.Pen.Color:=FColour;
-  Canvas.Pen.Style:=psSolid;
+  Canvas.Pen.Color  :=FColour;
+  Canvas.Pen.Style  :=psSolid;
   Canvas.Rectangle(0,0,Width,Height);
  end;
  //Paint the appropriate graphic
  if FTicked then Lgf.Assign(FOn) else Lgf.Assign(FOff);
  //And paint it onto the control
- R.Top:=0;
- R.Left:=0;
- R.Width:=Height;
+ R.Top   :=0;
+ R.Left  :=0;
+ R.Width :=Height;
  R.Height:=Height;
  Canvas.StretchDraw(R,Lgf);
  Lgf.Free;
@@ -482,9 +533,9 @@ If this is set, unset every other one
 -------------------------------------------------------------------------------}
 procedure TRISCOSTickBoxes.UnsetOthers;
 var
- LParent: TComponent;
- LGroup,
- Index  : Integer;
+ LParent: TComponent=nil;
+ LGroup : Integer=0;
+ Index  : Integer=0;
 begin
  if(FExclusive)and(FTicked)then
   //Now we need to unset every other radio box control sibling
@@ -495,7 +546,7 @@ begin
    //And iterate through it's children
    for Index:=0 to LParent.ComponentCount-1 do
     //Ignore ourself
-    if(LParent.Components[Index]<>Self)
+    if (LParent.Components[Index]<>Self)
     and(LParent.Components[Index].ClassName=ClassName)then //But not other radios
     begin
      if LParent.Components[Index] is TRISCOSRadioBox then
@@ -511,12 +562,13 @@ end;
 Caption has changed, so adjust the dimensions
 -------------------------------------------------------------------------------}
 procedure TRISCOSTickBoxes.SetWidth(const LCaption: String);
-var Ltext: String;
+var
+ Ltext: String='';
 begin
  FCaption:=LCaption;
- Ltext:=' '+FCaption;
- Height:=Canvas.TextHeight(Ltext);
- Width:=Canvas.TextWidth(Ltext)+Height+4;
+ Ltext   :=' '+FCaption;
+ Height  :=Canvas.TextHeight(Ltext);
+ Width   :=Canvas.TextWidth(Ltext)+Height+4;
  Invalidate;//Force a redraw
  Update;
 end;
@@ -542,7 +594,7 @@ Class creator - initialises the local variables
 -------------------------------------------------------------------------------}
 constructor TRISCOSTickBox.Create(AOwner: TComponent);
 var
- Lms: TMemoryStream;
+ Lms: TMemoryStream=nil;
 begin
  inherited Create(AOwner);
  FExclusive:=False;
@@ -573,7 +625,7 @@ Class creator - initialises the local variables
 -------------------------------------------------------------------------------}
 constructor TRISCOSRadioBox.Create(AOwner: TComponent);
 var
- Lms: TMemoryStream;
+ Lms: TMemoryStream=nil;
 begin
  inherited Create(AOwner);
  FExclusive:=True;
@@ -607,28 +659,36 @@ constructor TRISCOSSlider.Create(AOwner: TComponent);
 begin
  inherited Create(AOwner);
  //Default values
- FMin:=0;
- FMax:=100;
- FPosition:=0;
- FBackColour:=$FFFFFF;
- FColour:=$0000FF;
- FCaption:='';
- FSuffix:='';
- FShowValue:=False;
- FStep:=1;
- FHexValue:=False;
- FOrient:=csVertical;
- FGradient:=False;
- FPointers:=True;
- FFillSlider:=False;
- FOutline:=csOutOuter;
+ FMin        :=0;
+ FMax        :=100;
+ FPosition   :=0;
+ FBackColour :=clWhite;
+ FColour     :=clBlue;
+ FCaption    :='';
+ FSuffix     :='';
+ FShowValue  :=False;
+ FStep       :=1;
+ FHexValue   :=False;
+ FOrient     :=csVertical;
+ FGradient   :=False;
+ FPointers   :=True;
+ FFaders     :=False;
+ FFaderGrads :=True;
+ FFaderColour:=csBlack;
+ FGradColour :=clBlack;
+ FFillSlider :=False;
+ FOutline    :=csOutOuter;
  FTransparent:=True;
- F3DBorder:=False;
- FBorderSize:=Round(ScreenInfo.PixelsPerInchX/96)<<1;//Scaled and to the nearest even number
+ F3DBorder   :=False;
+ FBorderSize :=Round(ScreenInfo.PixelsPerInchX/96)<<1;//Scaled and to the nearest even number
+ FValueDiv   :=1;
+ Width       :=40;
+ Height      :=300;
+ FFaderSize  :=0;
  //We need to react to the MouseDown, MouseMove and MouseUp events
- OnMouseDown:=@FDown;
- OnMouseMove:=@FMove;
- OnMouseUp:=@FUp;
+ OnMouseDown :=@FDown;
+ OnMouseMove :=@FMove;
+ OnMouseUp   :=@FUp;
 end;
 
 {-------------------------------------------------------------------------------
@@ -644,15 +704,19 @@ Paint the control
 -------------------------------------------------------------------------------}
 procedure TRISCOSSlider.Paint;
 var
- LUnit     : Real;
- LSliderSize,
- LPosition,
- LY,Index,
- LTX,LX,LH : Integer;
- LCaption  : String;
- Lms       : TMemoryStream;
- Lpng      : TPortableNetworkGraphic;
- LR        : TRect;
+ LUnit      : Real=0;
+ LSliderSize: Integer=0;
+ LPosition  : Integer=0;
+ LY         : Integer=0;
+ Index      : Integer=0;
+ LTX        : Integer=0;
+ LTY        : Integer=0;
+ LX         : Integer=0;
+ LH         : Integer=0;
+ LCaption   : String='';
+ Lms        : TMemoryStream=nil;
+ Lpng       : TPortableNetworkGraphic=nil;
+ LR         : TRect=();
  procedure GetGraphic(LGraphic: array of Byte);
  begin
   Lms.Clear;
@@ -661,16 +725,18 @@ var
   Lpng.LoadFromStream(Lms);
  end;
 begin
+ FFaderSize :=0;
  //Work out the position (centre of control)
  if FOrient=csVertical then
  begin
   LSliderSize:=(Width div 2)-FGap;
-  LX:=(Width-LSliderSize)div 2;
+  if(FFaders)and(FPointers)then LSliderSize:=(Width div 2)-FGap*4;
+  LX         :=(Width-LSliderSize)div 2;
  end
  else
  begin
   LSliderSize:=(Height div 2)-FGap;
-  LX:=(Height-LSliderSize)div 2;
+  LX         :=(Height-LSliderSize)div 2;
  end;
  //Work out where the top and bottom of the slider area
  if FOrient=csVertical then
@@ -683,6 +749,25 @@ begin
   LH:=GetSliderStart;
   LY:=GetSliderEnd;
  end;
+ //Fader - take account of the fader overhang
+ if(FFaders)and(FPointers)then
+ begin
+  //First we need to know the height of the graphic
+  Lms :=TMemoryStream.Create;
+  Lpng:=TPortableNetworkGraphic.Create;
+  //And the colour
+  case FFaderColour of
+   csBlack : GetGraphic(FBlackFader);
+   csRed   : GetGraphic(FRedFader);
+   csGreen : GetGraphic(FGreenFader);
+   csBlue  : GetGraphic(FBlueFader);
+   csYellow: GetGraphic(FYellowFader);
+   csWhite : GetGraphic(FWhiteFader);
+  end;
+  FFaderSize :=Round(Lpng.Height*(60/Width)) div 4;
+  dec(LH,FFaderSize);
+  inc(LY,FFaderSize);
+ end;
  //Are we displaying the value?
  LCaption:=GetValue;
  //If so, then paint it
@@ -694,7 +779,8 @@ begin
   if FOrient=csVertical then
   begin
    LTX:=(Width-Canvas.GetTextWidth(LCaption))div 2;
-   Canvas.TextOut(LTX,LH,LCaption);
+   if F3DBorder then LTY:=FBorderSize else LTY:=0;
+   Canvas.TextOut(LTX,Height-Canvas.GetTextHeight(LCaption)-LTY,LCaption);
   end
   else
   begin
@@ -710,7 +796,8 @@ begin
   if FOrient=csVertical then
   begin
    LTX:=(Width-Canvas.GetTextWidth(FCaption))div 2;
-   Canvas.TextOut(LTX,0,FCaption);
+   if F3DBorder then LTY:=FBorderSize else LTY:=0;
+   Canvas.TextOut(LTX,LTY,FCaption);
   end
   else
   begin
@@ -724,7 +811,7 @@ begin
  if not FTransparent then
  begin
   Canvas.Brush.Color:=FBackColour;
-  Canvas.Pen.Style:=psClear;
+  Canvas.Pen.Style  :=psClear;
   if FOrient=csVertical then
    Canvas.Rectangle(LX,LY,LX+LSliderSize,LH)
   else
@@ -764,7 +851,7 @@ begin
   else
    LPosition:=LY;
   Canvas.Brush.Color:=FColour;
-  if(FOutline AND csOutInner)=csOutInner then
+  if(FOutline=csOutInner)or(FOutline=csOutBoth)then
   begin
    Canvas.Pen.Style:=psSolid;
    Canvas.Pen.Color:=$000000;
@@ -773,41 +860,79 @@ begin
    Canvas.Pen.Style:=psClear;
   //Draw the rectangle
   if FOrient=csVertical then
-   Canvas.Rectangle(LX,LPosition,LX+LSliderSize,LH)
+   Canvas.Rectangle(LX       ,LPosition,LX+LSliderSize,LH)
   else
-   Canvas.Rectangle(LPosition,LX,LH,LX+LSliderSize);
+   Canvas.Rectangle(LPosition,LX       ,LH            ,LX+LSliderSize);
  end;
  //Draw a little sliver of bar if at minimum, and no outer outline
- if(not FFillSlider)and(FPosition=FMin)and((FOutline AND csOutOuter)=0)then
+ if (not FFillSlider)
+ and(FPosition=FMin)
+ and(FOutline<>csOutOuter)
+ and(FOutline<>csOutBoth) then
   if FOrient=csVertical then
    Canvas.Rectangle(LX,LH,LX+LSliderSize,LH+1)
   else
-   Canvas.Rectangle(LH,LX,LH+1,LX+LSliderSize);
+   Canvas.Rectangle(LH,LX,LH+1          ,LX+LSliderSize);
  //Draw the outline
- if(FOutline AND csOutOuter)=csOutOuter then
+ if(FOutline=csOutOuter)or(FOutline=csOutBoth)then
  begin
-  Canvas.Pen.Color:=$000000;
-  Canvas.Pen.Style:=psSolid;
+  Canvas.Pen.Color  :=$000000;
+  Canvas.Pen.Style  :=psSolid;
   Canvas.Brush.Style:=bsClear;
   if FOrient=csVertical then
    Canvas.Rectangle(LX,LY,LX+LSliderSize,LH)
   else
-   Canvas.Rectangle(LH,LX,LY,LX+LSliderSize);
+   Canvas.Rectangle(LH,LX,LY            ,LX+LSliderSize);
+ end;
+ //Graduation marks
+ if(FFaders)and(FFaderGrads)and(FPointers)then
+ begin
+  //Set the colour and style
+  Canvas.Pen.Color  :=FGradColour;
+  Canvas.Pen.Style  :=psSolid;
+  //Mark from min to max
+  for Index:=FMin to FMax do
+  begin
+   //Different line size for different gradients
+   if Index=0 then Canvas.Pen.Width:=2 else Canvas.Pen.Width:=1;
+   //Draw the line
+   if(Index mod 10=0)
+   or(Index=FMin)
+   or(Index=FMax)
+   or(Index=0)then
+   begin
+    //Get the position of the tick mark
+    LPosition:=LH-Round(((Index-FMin)/(FMax-FMin))*(LH-LY));
+    //Draw a full line for every tenth
+    if((Index div FValueDiv)mod 10=0)or(Index=FMin)or(Index=FMax)then
+    begin
+     Canvas.Line(FGap               ,LPosition,LX-FGap   ,LPosition);
+     Canvas.Line(LX+LSliderSize+FGap,LPosition,Width-FGap,LPosition);
+    end;
+    //Draw a half line for halfway between
+    if(Index div FValueDiv)mod 5=0 then
+    begin
+     Canvas.Line(FGap                 ,LPosition,LX-FGap*3 ,LPosition);
+     Canvas.Line(LX+LSliderSize+FGap*3,LPosition,Width-FGap,LPosition);
+    end;
+   end;
+  end;
+  Canvas.Pen.Width:=1;
  end;
  //3D Border
  if F3DBorder then
  begin
   //Top
   Canvas.Brush.Style:=bsSolid;
-  Canvas.Pen.Style:=psSolid;
+  Canvas.Pen.Style  :=psSolid;
   Canvas.Brush.Color:=$777777;
-  Canvas.Pen.Color:=$777777;
+  Canvas.Pen.Color  :=$777777;
   Canvas.Rectangle(0,0,Width,FBorderSize);
   //Left
   Canvas.Rectangle(0,0,FBorderSize,Height);
   //Bottom
   Canvas.Brush.Color:=$FFFFFF;
-  Canvas.Pen.Color:=$FFFFFF;
+  Canvas.Pen.Color  :=$FFFFFF;
   Canvas.Rectangle(FBorderSize>>1,Height-FBorderSize,Width,Height);
   Canvas.Rectangle(0,Height-FBorderSize>>1,Width,Height);
   //Right;
@@ -819,45 +944,56 @@ begin
  begin
   //This is only calculated when partially filled
   LPosition:=LH-Round(((FPosition-FMin)/(FMax-FMin))*(LH-LY));
-  //Create the containers
-  Lms:=TMemoryStream.Create;
-  Lpng:=TPortableNetworkGraphic.Create;
-  if FOrient=csVertical then
+  if FFaders then //Fader
   begin
-   //Left
-   GetGraphic(FPointerLeft);
-   LR.Left:=LX+LSliderSize;
-   LR.Top:=LPosition-(Width-LSliderSize)div 4;
-   LR.Right:=Width;
-   LR.Bottom:=LPosition+(Width-LSliderSize)div 4;
-   Canvas.StretchDraw(LR,Lpng);
-   //Right
-   GetGraphic(FPointerRight);
-   LR.Left:=0;
-   LR.Top:=LPosition-(Width-LSliderSize)div 4;
-   LR.Right:=LX;
-   LR.Bottom:=LPosition+(Width-LSliderSize)div 4;
+   LR.Left  :=FGap;
+   LR.Top   :=LPosition-FFaderSize;
+   LR.Right :=Width-FGap;
+   LR.Bottom:=LPosition+FFaderSize;
    Canvas.StretchDraw(LR,Lpng);
   end
   else
-  begin
-   //Up
-   GetGraphic(FPointerUp);
-   LR.Top:=LX+LSliderSize;
-   LR.Left:=LPosition-(Height-LSliderSize)div 4;
-   LR.Bottom:=Height;
-   LR.Right:=LPosition+(Height-LSliderSize)div 4;
-   Canvas.StretchDraw(LR,Lpng);
-   //Down
-   GetGraphic(FPointerDown);
-   LR.Top:=0;
-   LR.Left:=LPosition-(Height-LSliderSize)div 4;
-   LR.Bottom:=LX;
-   LR.Right:=LPosition+(Height-LSliderSize)div 4;
-   Canvas.StretchDraw(LR,Lpng);
+  begin //Pointers
+   //Create the containers
+   Lms :=TMemoryStream.Create;
+   Lpng:=TPortableNetworkGraphic.Create;
+   if FOrient=csVertical then
+   begin
+    //Left
+    GetGraphic(FPointerLeft);
+    LR.Left  :=LX+LSliderSize;
+    LR.Top   :=LPosition-(Width-LSliderSize)div 4;
+    LR.Right :=Width;
+    LR.Bottom:=LPosition+(Width-LSliderSize)div 4;
+    Canvas.StretchDraw(LR,Lpng);
+    //Right
+    GetGraphic(FPointerRight);
+    LR.Left  :=0;
+    LR.Top   :=LPosition-(Width-LSliderSize)div 4;
+    LR.Right :=LX;
+    LR.Bottom:=LPosition+(Width-LSliderSize)div 4;
+    Canvas.StretchDraw(LR,Lpng);
+   end
+   else
+   begin
+    //Up
+    GetGraphic(FPointerUp);
+    LR.Top   :=LX+LSliderSize;
+    LR.Left  :=LPosition-(Height-LSliderSize)div 4;
+    LR.Bottom:=Height;
+    LR.Right :=LPosition+(Height-LSliderSize)div 4;
+    Canvas.StretchDraw(LR,Lpng);
+    //Down
+    GetGraphic(FPointerDown);
+    LR.Top   :=0;
+    LR.Left  :=LPosition-(Height-LSliderSize)div 4;
+    LR.Bottom:=LX;
+    LR.Right :=LPosition+(Height-LSliderSize)div 4;
+    Canvas.StretchDraw(LR,Lpng);
+   end;
+   Lpng.Free;
+   Lms.Free;
   end;
-  Lpng.Free;
-  Lms.Free;
  end;
 end;
 
@@ -866,18 +1002,17 @@ Position and/or step has been changed
 -------------------------------------------------------------------------------}
 procedure TRISCOSSlider.SetPosition(const LPosition: Integer);
 var
- LOldPosition: Integer;
+ LOldPosition: Integer=0;
 begin
  //Ensure that they are valid
  if FStep<1 then FStep:=1;
- if FStep>FMax div 2 then FStep:=FMax div 2;
+ if FStep>(FMax-FMin)div 2 then FStep:=(FMax-FMin)div 2;
  //Remember the old position
  LOldPosition:=FPosition;
  //Now change it
  if(LPosition>=FMin)and(LPosition<=FMax)then FPosition:=LPosition;
  FPosition:=(FPosition div FStep)*FStep;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
  //Fire the OnChange event, if it has changed
  if FPosition<>LOldPosition then
   if Assigned(FOnChange) then FOnChange(Self as TObject);
@@ -899,8 +1034,7 @@ The colour has been changed
 procedure TRISCOSSlider.SetColour(const LColour: TColor);
 begin
  FColour:=LColour;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
@@ -909,8 +1043,7 @@ The suffix has been changed
 procedure TRISCOSSlider.SetSuffix(const LSuffix: String);
 begin
  FSuffix:=LSuffix;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
@@ -919,8 +1052,7 @@ The caption has been changed
 procedure TRISCOSSlider.SetCaption(const LCaption: String);
 begin
  FCaption:=LCaption;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
@@ -929,8 +1061,7 @@ The background colour has been changed
 procedure TRISCOSSlider.SetBackColour(const LBackColour: TColor);
 begin
  FBackColour:=LBackColour;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
@@ -939,8 +1070,7 @@ The transparent setting has been changed
 procedure TRISCOSSlider.SetTransparent(const LTransparent: Boolean);
 begin
  FTransparent:=LTransparent;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
@@ -949,8 +1079,18 @@ The 3D Border setting has been changed
 procedure TRISCOSSlider.Set3DBorder(const L3DBorder: Boolean);
 begin
  F3DBorder:=L3DBorder;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
+end;
+
+{-------------------------------------------------------------------------------
+The value divider setting has been changed
+-------------------------------------------------------------------------------}
+procedure TRISCOSSlider.SetValueDiv(const LValueDiv: Byte);
+begin
+ FValueDiv:=LValueDiv;
+ if FValueDiv<1 then FValueDiv:=1;
+ if FValueDiv>(FMax-FMin)div 2 then FValueDiv:=(FMax-FMin)div 2;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
@@ -961,8 +1101,8 @@ begin
  //Ensure it is valid
  if LMax>FMin then FMax:=LMax;
  if FPosition>FMax then FPosition:=FMax;
- Invalidate; //Force a redraw
- Update;
+ SetValueDiv(FValueDiv);
+ SetPosition(FPosition);
 end;
 
 {-------------------------------------------------------------------------------
@@ -973,8 +1113,8 @@ begin
  //Ensure it is valid
  if FMax>LMin then FMin:=LMin;
  if FPosition<FMin then FPosition:=FMin;
- Invalidate; //Force a redraw
- Update;
+ SetValueDiv(FValueDiv);
+ SetPosition(FPosition);
 end;
 
 {-------------------------------------------------------------------------------
@@ -983,8 +1123,7 @@ The show value boolean has been toggled
 procedure TRISCOSSlider.SetShowValue(const LShowValue: Boolean);
 begin
  FShowValue:=LShowValue;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
@@ -993,21 +1132,17 @@ The show as Hex has been toggled
 procedure TRISCOSSlider.SetHexValue(const LHexValue: Boolean);
 begin
  FHexValue:=LHexValue;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
 Orientation has changed
 -------------------------------------------------------------------------------}
-procedure TRISCOSSlider.SetOrient(const LOrient: Integer);
+procedure TRISCOSSlider.SetOrient(const LOrient: TOrientation);
 begin
- if(LOrient=csHorizontal)or(LOrient=csVertical)then
- begin
-  FOrient:=LOrient;
-  Invalidate; //Force a redraw
-  Update;
- end;
+ FOrient:=LOrient;
+ if FFaders then FOrient:=csVertical; //Faders are vertical
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
@@ -1016,8 +1151,7 @@ Gradient has changed
 procedure TRISCOSSlider.SetGradient(const LGradient: Boolean);
 begin
  FGradient:=LGradient;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
@@ -1026,8 +1160,44 @@ Showing pointers has changed
 procedure TRISCOSSlider.SetPointers(const LPointers: Boolean);
 begin
  FPointers:=LPointers;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
+end;
+
+{-------------------------------------------------------------------------------
+Pointers are faders
+-------------------------------------------------------------------------------}
+procedure TRISCOSSlider.SetFaders(const LFaders: Boolean);
+begin
+ FFaders:=LFaders;
+ if(FFaders)and(FOrient=csHorizontal)then SetOrient(csVertical); //Faders are vertical
+ ForceRedraw;
+end;
+
+{-------------------------------------------------------------------------------
+Print the gradient marks for faders
+-------------------------------------------------------------------------------}
+procedure TRISCOSSlider.SetFaderGrads(const LFaderGrads: Boolean);
+begin
+ FFaderGrads:=LFaderGrads;
+ ForceRedraw;
+end;
+
+{-------------------------------------------------------------------------------
+Fader colour has changed
+-------------------------------------------------------------------------------}
+procedure TRISCOSSlider.SetFaderColour(const LFaderColour: TFaderColour);
+begin
+ FFaderColour:=LFaderColour;
+ ForceRedraw;
+end;
+
+{-------------------------------------------------------------------------------
+Fader graduation colour has changed
+-------------------------------------------------------------------------------}
+procedure TRISCOSSlider.SetGradColour(const LGradColour: TColor);
+begin
+ FGradColour:=LGradColour;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
@@ -1036,21 +1206,16 @@ Fill the slider has changed
 procedure TRISCOSSlider.SetFillSlider(const LFillSlider: Boolean);
 begin
  FFillSlider:=LFillSlider;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
 The outline setting has changed
 -------------------------------------------------------------------------------}
-procedure TRISCOSSlider.SetOutline(const LOutline: Integer);
+procedure TRISCOSSlider.SetOutline(const LOutline: TOuterBorder);
 begin
- if(LOutline>=csOutNone)and(LOutline<=csOutBoth)then
- begin
-  FOutline:=LOutline;
-  Invalidate; //Force a redraw
-  Update;
- end;
+ FOutline:=LOutline;
+ ForceRedraw;
 end;
 
 {-------------------------------------------------------------------------------
@@ -1070,17 +1235,18 @@ React to the Mouse Move
 -------------------------------------------------------------------------------}
 procedure TRISCOSSlider.FMove(Sender: TObject; Shift: TShiftState; X,Y: Integer);
 var
- Lposition,
- LH,LY     : Integer;
- Lpercent  : Real;
+ Lposition : Integer=0;
+ LH        : Integer=0;
+ LY        : Integer=0;
+ Lpercent  : Real=0;
 begin
  //Only if the mouse button is down
  if FMouseIsDown then
  begin
   //Work out position
-  LH:=GetSliderEnd;
-  LY:=GetSliderStart;
-  if((FOrient=csVertical)and(Y>=LY)and(Y<=LH))
+  LH:=GetSliderEnd-FFaderSize;
+  LY:=GetSliderStart+FFaderSize;
+  if((FOrient=csVertical)  and(Y>=LY)and(Y<=LH))
   or((FOrient=csHorizontal)and(X>=LY)and(X<=LH))then
   begin
    if FOrient=csVertical then Lposition:=LH-Y else Lposition:=X-LY;
@@ -1107,7 +1273,8 @@ Get the height of the slider, taking into account the text
 -------------------------------------------------------------------------------}
 function TRISCOSSlider.GetSliderEnd: Integer;
 var
- LCaption : String;
+ LCaption : String='';
+ LTY      : Integer=0;
 begin
  //Default, if there is nothing to print
  if FOrient=csVertical then
@@ -1121,7 +1288,10 @@ begin
   //Find out how high it will be
   Canvas.Font:=Font;
   if FOrient=csVertical then
-   Result:=Height-Canvas.GetTextHeight(LCaption)
+  begin
+   Result:=Height-Canvas.GetTextHeight(LCaption);
+   if F3DBorder then dec(Result,FBorderSize);
+  end
   else //Or wide
    Result:=Width-(Canvas.GetTextWidth(FCaption)+FGap);
  end;
@@ -1132,7 +1302,7 @@ Returns a string representation of the value
 -------------------------------------------------------------------------------}
 function TRISCOSSlider.GetValue: String;
 var
- L: Byte;
+ L: Byte=0;
 begin
  Result:='';
  //If we are showing a value
@@ -1148,8 +1318,10 @@ begin
   else //Otherwise in decimal
   begin
    //Pad to how much?
-   L:=Length(IntToStr(FMax));
-   Result:=PadLeft(IntToStr(FPosition),L);
+   L     :=Length(IntToStr(FMax));
+   if FValueDiv>1 then inc(L);
+   if FValueDiv=0 then FValueDiv:=1;
+   Result:=PadLeft(FloatToStr(FPosition/FValueDiv),L);
   end;
   if Result<>'' then Result:=Result+FSuffix;
  end;
@@ -1160,25 +1332,28 @@ Work out where the top of the slider is
 -------------------------------------------------------------------------------}
 function TRISCOSSlider.GetSliderStart: Integer;
 var
- LCaption : String;
- LTemp: Integer;
+ LCaption : String='';
+ LTemp    : Integer=0;
 begin
  //Default - if no text to print
  if FOrient=csVertical then
-  Result:=Width div 4
+  Result:=(Width div 4)
  else
   Result:=Height div 4;
  Canvas.Font:=Font;
  if(FCaption<>'')and(FOrient=csVertical)then
+ begin
   Result:=Canvas.GetTextHeight(FCaption);
+  if F3DBorder then inc(Result,FBorderSize);
+ end;
  if FOrient=csHorizontal then
  begin
   //Get the maximum value
-  LTemp:=FPosition;//Remember the previous setting
-  FPosition:=FMax;//Set it to the max
-  LCaption:=GetValue;//Get the value
-  FPosition:=LTemp;//Reset it
-  Result:=Canvas.GetTextWidth(LCaption)+FGap;
+  LTemp    :=FPosition;//Remember the previous setting
+  FPosition:=FMax;     //Set it to the max
+  LCaption :=GetValue; //Get the value
+  FPosition:=LTemp;    //Reset it
+  Result   :=Canvas.GetTextWidth(LCaption)+FGap;
  end;
 end;
 
@@ -1193,12 +1368,12 @@ begin
  //Set the default variables
  FDefault:=False;
  FCaption:='';
- FPushed:=False;
+ FPushed :=False;
  SetDimensions;
  FModalResult:=mrNone;
  //We need to react to the MouseDown, MouseMove and MouseUp events
  OnMouseDown:=@FDown;
- OnMouseUp:=@FUp;
+ OnMouseUp  :=@FUp;
 end;
 
 {-------------------------------------------------------------------------------
@@ -1214,39 +1389,37 @@ Paint the control
 -------------------------------------------------------------------------------}
 procedure TRISCOSButton.Paint;
 var
- LX,LY   : Integer;
- LCol    : TColor;
- Lsize   : Integer;
+ LX    : Integer=0;
+ LY    : Integer=0;
+ LCol  : TColor=0;
+ Lsize : Integer=0;
 begin
  //Border size, 2px scaled and to the nearest even number
  Lsize:=Round(ScreenInfo.PixelsPerInchX/96)<<1;
  //Draw the button
  Canvas.Brush.Style:=bsSolid;
- Canvas.Pen.Style:=psClear;
+ Canvas.Pen.Style  :=psClear;
  //Outer border, top and left
- if(not FDefault)and(not FPushed)then //Normal button, not pushed
-  Canvas.Brush.Color:=$FFFFFF;
- if(FDefault)and(not Enabled)then //Default button, disabled
-  Canvas.Brush.Color:=$BBBBBB;
- if((FDefault)and(Enabled))                     //Default button, enabled
- or((not FDefault)and(Enabled)and(FPushed))then //and normal button, pushed, enabled
+ if(not FDefault)and(not FPushed)then Canvas.Brush.Color:=$FFFFFF;//Normal button, not pushed
+ if(FDefault)and(not Enabled)    then Canvas.Brush.Color:=$BBBBBB;//Default button, disabled
+ if((FDefault)and(Enabled))                                       //Default button, enabled
+ or((not FDefault)and(Enabled)and(FPushed))then                   //and normal button, pushed, enabled
   Canvas.Brush.Color:=$777777;
  Canvas.Rectangle(0,0,Width,Lsize);
  Canvas.Rectangle(0,0,Lsize,Height);
  //Outer border, bottom and right 
- if(not FDefault)and(not FPushed)and(Enabled)then //Normal button, not pushed, enabled
+ if(not FDefault)and(not FPushed)and(Enabled)then                 //Normal button, not pushed, enabled
   Canvas.Brush.Color:=$777777;
- if(FDefault)                                   //Default button
- or((not FDefault)and(Enabled)and(FPushed))then //and normal button, pushed, enabled
+ if(FDefault)                                                     //Default button
+ or((not FDefault)and(Enabled)and(FPushed))then                   //and normal button, pushed, enabled
   Canvas.Brush.Color:=$FFFFFF;
- if(not FDefault)and(not Enabled)then //Normal button, disabled
-  Canvas.Brush.Color:=$BBBBBB;
- Canvas.Rectangle(Width-Lsize,Lsize,Width,Height);
- Canvas.Rectangle(Width-Lsize div 2,Lsize div 2,Width,Lsize);
- Canvas.Rectangle(Lsize div 2,Height-Lsize,Width,Height);
- Canvas.Rectangle(0,Height-Lsize div 2,Lsize div 2,Height);
+ if(not FDefault)and(not Enabled)then Canvas.Brush.Color:=$BBBBBB;//Normal button, disabled
+ Canvas.Rectangle(Width-Lsize      ,Lsize             ,Width      ,Height);
+ Canvas.Rectangle(Width-Lsize div 2,Lsize div 2       ,Width      ,Lsize);
+ Canvas.Rectangle(Lsize div 2      ,Height-Lsize      ,Width      ,Height);
+ Canvas.Rectangle(0                ,Height-Lsize div 2,Lsize div 2,Height);
  //Button surface (normal) and gap between inside and outside borders (default)
- if(FDefault)then Canvas.Brush.Color:=$BBEEEE;
+ if(FDefault)    then Canvas.Brush.Color:=$BBEEEE;
  if(not FDefault)then Canvas.Brush.Color:=$DDDDDD;
  Canvas.Rectangle(Lsize,Lsize,Width-Lsize,Height-Lsize);
  //Default button, inside
@@ -1255,13 +1428,13 @@ begin
   //Top and left inside border
   Canvas.Brush.Color:=$FFFFFF;
   Canvas.Rectangle(Lsize*2,Lsize*2,Width-Lsize*2,Lsize*3);
-  Canvas.Rectangle(Lsize*2,Lsize*2,Lsize*3,Height-Lsize*2);
+  Canvas.Rectangle(Lsize*2,Lsize*2,Lsize*3      ,Height-Lsize*2);
   //Bottom and right inside border
   if Enabled then Canvas.Brush.Color:=$777777 else Canvas.Brush.Color:=$BBBBBB;
-  Canvas.Rectangle(Width-Lsize*3,Lsize*3,Width-Lsize*2,Height-Lsize*2);
-  Canvas.Rectangle(Width-Lsize*2-Lsize div 2,Lsize*2+Lsize div 2,Width-Lsize*2,Lsize*3);
-  Canvas.Rectangle(Lsize*2+Lsize div 2,Height-Lsize*3,Width-Lsize*3,Height-Lsize*2);
-  Canvas.Rectangle(Lsize*2,Height-Lsize*2-Lsize div 2,Lsize*2+Lsize div 2,Height-Lsize*2);
+  Canvas.Rectangle(Width-Lsize*3            ,Lsize*3                   ,Width-Lsize*2      ,Height-Lsize*2);
+  Canvas.Rectangle(Width-Lsize*2-Lsize div 2,Lsize*2+Lsize div 2       ,Width-Lsize*2      ,Lsize*3);
+  Canvas.Rectangle(Lsize*2+Lsize div 2      ,Height-Lsize*3            ,Width-Lsize*3      ,Height-Lsize*2);
+  Canvas.Rectangle(Lsize*2                  ,Height-Lsize*2-Lsize div 2,Lsize*2+Lsize div 2,Height-Lsize*2);
   //Button surface
   Canvas.Brush.Color:=$DDDDDD;
   Canvas.Rectangle(Lsize*3,Lsize*3,Width-Lsize*3,Height-Lsize*3);
@@ -1274,7 +1447,7 @@ begin
   //Change if disabled
   if not Enabled then Canvas.Font.Color:=$8E8E8E;
   //Find the centred position
-  LX:=(Width-Canvas.GetTextWidth(FCaption))div 2;
+  LX:=(Width -Canvas.GetTextWidth( FCaption))div 2;
   LY:=(Height-Canvas.GetTextHeight(FCaption))div 2;
   //Write with transparent background
   Canvas.Brush.Style:=bsClear;
@@ -1311,7 +1484,7 @@ The click procedure
 -------------------------------------------------------------------------------}
 procedure TRISCOSButton.Click;
 var
- Lctrl: TCustomForm;
+ Lctrl: TCustomForm=nil;
 begin
  if Assigned(FOnClick) then FOnClick(Self as TObject);
  if ModalResult<>mrNone then
@@ -1355,8 +1528,8 @@ var
 begin
  if FDefault then w:=92 else w:=84; //Width
  if FDefault then h:=34 else h:=26; //Height
- Width:=Round(w*(ScreenInfo.PixelsPerInchX/96)); //Set width, scaled
- Height:=Round(h*(ScreenInfo.PixelsPerInchX/96));//Set height, scaled
+ Width :=Round(w*(ScreenInfo.PixelsPerInchX/96)); //Set width, scaled
+ Height:=Round(h*(ScreenInfo.PixelsPerInchX/96)); //Set height, scaled
 end;
 
 {-------------------------------------------------------------------------------
@@ -1494,20 +1667,20 @@ begin
  FPlainText:=TExtStringList.Create;
  FPlainText.FColouredMemo:=Self;
  //Create the canvas
- FContent:=TImage.Create(Self);
- FContent.Parent:=Self;
- FContent.Top :=0;
- FContent.Left:=0;
+ FContent                      :=TImage.Create(Self);
+ FContent.Parent               :=Self;
+ FContent.Top                  :=0;
+ FContent.Left                 :=0;
  FContent.Picture.Bitmap.Width :=ClientWidth;
  FContent.Picture.Bitmap.Height:=ClientHeight;
- FContent.Width :=ClientWidth;
- FContent.Height:=ClientHeight;
- FContent.Visible:=True;
+ FContent.Width                :=ClientWidth;
+ FContent.Height               :=ClientHeight;
+ FContent.Visible              :=True;
  //Defaults
- FLineSpace:=4;   //Space between lines, in pixels
- FIndent:=4;      //Indent in from the left, in pixels
- Color:=$FFFFFF;  //Default background colour
- TextWrap:=False; //Whether to wrap a line to the next
+ FLineSpace:=4;       //Space between lines, in pixels
+ FIndent   :=4;       //Indent in from the left, in pixels
+ Color     :=$FFFFFF; //Default background colour
+ TextWrap  :=False;   //Whether to wrap a line to the next
 end;
 
 {-------------------------------------------------------------------------------
@@ -1526,17 +1699,18 @@ Repaint method - this is where most of the work is done
 -------------------------------------------------------------------------------}
 procedure TColouredMemo.Paint;
 var
- LLine,
- LIndex,
- XPos,
- YPos,
- W,H    : Integer;
- LPart,
- LText  : String;
- LTemp,
- LRed,
- LGreen,
- LBlue  : Byte;
+ LLine : Integer=0;
+ LIndex: Integer=0;
+ XPos  : Integer=0;
+ YPos  : Integer=0;
+ W     : Integer=0;
+ H     : Integer=0;
+ LPart : String='';
+ LText : String='';
+ LTemp : Byte=0;
+ LRed  : Byte=0;
+ LGreen: Byte=0;
+ LBlue : Byte=0;
  //Function to remove control characters
  function RemCont(rcText: String): String;
  var rcIndex: Integer;
@@ -1615,9 +1789,9 @@ var
   else PrintText(wtText);//No text wrapping
  end;
 begin
- LRed:=0;
+ LRed  :=0;
  LGreen:=0;
- LBlue:=0;
+ LBlue :=0;
  //Set the font
  FContent.Canvas.Font:=Font;
  //Starting size
@@ -1647,15 +1821,15 @@ begin
  //Height can't be smaller than the scroll height
  if H<ClientHeight then H:=ClientHeight;
  //Set the canvas size
- FContent.Picture.Bitmap.Width:=W;
+ FContent.Picture.Bitmap.Width :=W;
  FContent.Picture.Bitmap.Height:=H;
- FContent.Width:=W;
+ FContent.Width :=W;
  FContent.Height:=H;
  //Clear the background
  FContent.Canvas.Brush.Color:=Color;
  FContent.Canvas.Brush.Style:=bsSolid;
- FContent.Canvas.Pen.Color:=Color;
- FContent.Canvas.Pen.Style:=psSolid;
+ FContent.Canvas.Pen.Color  :=Color;
+ FContent.Canvas.Pen.Style  :=psSolid;
  FContent.Canvas.Rectangle(0,0,W,H);
  //Are there any lines entered?
  if FLines.Count>0 then
@@ -1730,9 +1904,9 @@ begin
          FContent.Canvas.Font.Style:=FContent.Canvas.Font.Style-[fsUnderline];
        end;
       end;
-      $02: FContent.Canvas.Font.Color:=Font.Color;//Reset foreground colour : $82
-      $04: FContent.Canvas.Brush.Color:=Color;//Reset background colour : $84
-      $06: FContent.Canvas.Font.Style:=Font.Style;//Reset font style : $86
+      $02: FContent.Canvas.Font.Color :=Font.Color;//Reset foreground colour : $82
+      $04: FContent.Canvas.Brush.Color:=Color;     //Reset background colour : $84
+      $06: FContent.Canvas.Font.Style :=Font.Style;//Reset font style : $86
      end;
     end;
     //Valid ASCII character? add it to the 'part of' string
@@ -1815,7 +1989,7 @@ procedure TGJHRegistry.DeleteKey(key: String);
 {$IFNDEF Darwin}}
 function TGJHRegistry.DeleteKey(key: String): Boolean;
 var
- x: Boolean;
+ x: Boolean=False;
 //{$ENDIF}
 begin
 //{$IFNDEF Darwin}
@@ -1836,7 +2010,7 @@ Function to read a string from the registry, or create it if it doesn't exist
 //{$IFNDEF Darwin}
 function TGJHRegistry.GetRegValS(V: String;D: String): String;
 var
- X: String;
+ X: String='';
 begin
  OpenReg(ExtractKey(V));
  If FRegistry.ValueExists(V)then X:=FRegistry.ReadString(V)
@@ -1846,7 +2020,7 @@ begin
 end;
 function TGJHRegistry.GetRegValS(V: String): String;
 var
- X: String;
+ X: String='';
 begin
  OpenReg(ExtractKey(V));
  If FRegistry.ValueExists(V)then X:=FRegistry.ReadString(V) else X:='';
@@ -1861,7 +2035,7 @@ Function to read an array from the registry, or create it if it doesn't exist
 //{$IFNDEF Darwin}
 procedure TGJHRegistry.GetRegValA(V: String;var D: array of Byte);
 var
- s: Integer;
+ s: Integer=0;
 begin
  OpenReg(ExtractKey(V));
  If FRegistry.ValueExists(V)then
@@ -1883,7 +2057,7 @@ Function to read an integer from the registry, or create it if it doesn't exist
 //{$IFNDEF Darwin}
 function TGJHRegistry.GetRegValI(V: String;D: Cardinal;CrNew: Boolean=True): Cardinal;
 var
- X: Cardinal;
+ X: Cardinal=0;
 begin
  OpenReg(ExtractKey(V));
  If FRegistry.ValueExists(V)then X:=FRegistry.ReadInteger(V)
@@ -1919,7 +2093,7 @@ Function to read a boolean from the registry, or create it if it doesn't exist
 //{$IFNDEF Darwin}
 function TGJHRegistry.GetRegValB(V: String;D: Boolean): Boolean;
 var
- X: Boolean;
+ X: Boolean=False;
 begin
  OpenReg(ExtractKey(V));
  If FRegistry.ValueExists(V)then X:=FRegistry.ReadBool(V)
@@ -1929,7 +2103,7 @@ begin
 end;
 function TGJHRegistry.GetRegValB(V: String): Boolean;
 var
- X: Boolean;
+ X: Boolean=False;
 begin
  OpenReg(ExtractKey(V));
  If FRegistry.ValueExists(V)then X:=FRegistry.ReadBool(V) else X:=False;
