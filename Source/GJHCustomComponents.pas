@@ -25,7 +25,7 @@ Boston, MA 02110-1335, USA.
 interface
 
 uses
- Classes, SysUtils, Graphics, ExtCtrls, Controls, StrUtils, Math, Forms
+ Classes,SysUtils,Graphics,ExtCtrls,Controls,StrUtils,Math,Forms,Buttons,StdCtrls
  {{$IFNDEF Darwin}}, Registry//{$ENDIF}
 // {$IFDEF Darwin}, MacOSAll, CFPreferences{$ENDIF}
  ;
@@ -75,7 +75,8 @@ const
 type
  TRISCOSControl = class(TGraphicControl)
  private
-  FOnChange  : TNotifyEvent;
+  FOnChange : TNotifyEvent;
+  FNative   : Boolean;
   procedure ForceRedraw;
  published
   property OnChange: TNotifyEvent read FOnChange  write FOnChange;
@@ -91,30 +92,42 @@ type
   FGroup     : Integer;
   FOn,
   FOff       : TPortableNetworkGraphic;
-  FCaption   : String;
   FColour    : TColor;
-  procedure SetWidth(const LCaption: String);
+  FNativeBox : TObject;
+  function CreateTickBox(aOwner: TObject): TCheckBox;
+  function CreateRadioBox(aOwner: TObject): TRadioButton;
+  procedure SetCaption(const LCaption: String);
+  function GetCaption: String;
   procedure SetTicked(const LTicked: Boolean);
+  function GetTicked: Boolean;
+  procedure SetTop(aValue: Integer);
+  function GetTop: Integer;
+  procedure SetLeft(aValue: Integer);
+  function GetLeft: Integer;
+  procedure SetNative(aValue: Boolean);
   procedure UnsetOthers;
- protected
+ public
+  destructor Destroy; override;
   procedure Paint; override;
   procedure Click; override;
  published
   //Methods
   constructor Create(AOwner: TComponent); override;
   //Properties
-  property Caption:  String       read FCaption   write SetWidth;
-  property Colour:   TColor       read FColour    write FColour    default clNone;
-  property OnlyMouse:Boolean      read FOnlyMouse write FOnlyMouse default False;
-  property Ticked:   Boolean      read FTicked    write SetTicked  default False;
- public
-  destructor Destroy; override;
+  property Caption  : String  read GetCaption write SetCaption;
+  property Colour   : TColor  read FColour    write FColour     default clNone;
+  property OnlyMouse: Boolean read FOnlyMouse write FOnlyMouse  default False;
+  property NativeOS : Boolean read FNative    write SetNative   default False;
+  property Ticked   : Boolean read GetTicked  write SetTicked   default False;
+  property Top      : Integer read GetTop     write SetTop;
+  property Left     : Integer read GetLeft    write SetLeft;
  end;
 
 //Tick box - declarations ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 type
  TRISCOSTickBox = class(TRISCOSTickBoxes)
  private
+  procedure DoClick(Sender: TObject);
   const
 {$INCLUDE 'TickBoxGraphics.pas'}
  published
@@ -127,6 +140,7 @@ end;
 type
  TRISCOSRadioBox = class(TRISCOSTickBoxes)
  private
+  procedure DoClick(Sender: TObject);
   const
 {$INCLUDE 'RadioBoxGraphics.pas'}
  protected
@@ -194,21 +208,25 @@ type TRISCOSSlider = class(TRISCOSControl)
   function GetSliderEnd: Integer;
   function GetValue: String;
   function GetSliderStart: Integer;
-  procedure FDown(Sender: TObject; {%H-}Button: TMouseButton;
-                              {%H-}Shift: TShiftState; {%H-}X, {%H-}Y: Integer);
-  procedure FMove(Sender: TObject; {%H-}Shift: TShiftState;  X,Y: Integer);
-  procedure FUp(Sender: TObject; {%H-}Button: TMouseButton;
-                              {%H-}Shift: TShiftState; {%H-}X, {%H-}Y: Integer);
  const
 {$INCLUDE 'PointerGraphics.pas'}
 {$INCLUDE 'FaderGraphics.pas'}
   FGap = 4;
- protected
+ public
+  procedure MouseDown(Button :TMouseButton; Shift :TShiftState; X, Y :Integer); override;
+  procedure MouseMove(Shift :TShiftState; X, Y :Integer); override;
+  procedure MouseUp(Button :TMouseButton; Shift :TShiftState; X, Y :Integer); override;
   procedure Paint; override;
+  destructor Destroy; override;
  published
   //Methods
   constructor Create(AOwner: TComponent); override;
   //Properties
+  property OnMouseMove;
+  property OnMouseDown;
+  property OnMouseUp;
+  property OnMouseEnter;
+  property OnMouseLeave;
            //Background colour of the control, unless transparent
   property BackColour : TColor       read FBackColour  write SetBackColour  default $FFFFFF;
            //Use a RISC OS style 3D border
@@ -235,6 +253,8 @@ type TRISCOSSlider = class(TRISCOSControl)
   property Max        : Integer      read FMax         write SetMax         default 100;
            //Minimum value
   property Min        : Integer      read FMin         write SetMin         default 0;
+           //Whether to show native OS slider or RISC OS styled/fader
+  property NativeOS   : Boolean      read FNative      write FNative        default False;
            //How to orient the control - faders can only be vertical
   property Orientation: TOrientation read FOrient      write SetOrient      default csVertical;
            //What outlines to print - inside, outside or both
@@ -253,40 +273,38 @@ type TRISCOSSlider = class(TRISCOSControl)
   property Transparent: Boolean      read FTransparent write SetTransparent default True;
            //What to divide the value by to get the actual value (printed only)
   property ValueDiv   : Byte         read FValueDiv    write SetValueDiv    default 1;
- public
-  destructor Destroy; override;
 end;
 
 //RISC OS Buttons - declarations +++++++++++++++++++++++++++++++++++++++++++++++
-type TRISCOSButton = class(TGraphicControl)
+type TRISCOSButton = class(TCustomSpeedButton)
  private
-  FOnClick    : TNotifyEvent;
+  FNative,
   FPushed,
   FDefault    : Boolean;
-  FCaption    : String;
   FModalResult: TModalResult;
-  procedure FDown(Sender: TObject; {%H-}Button: TMouseButton;
-                              {%H-}Shift: TShiftState; {%H-}X, {%H-}Y: Integer);
-  procedure FUp(Sender: TObject; {%H-}Button: TMouseButton;
-                              {%H-}Shift: TShiftState; {%H-}X, {%H-}Y: Integer);
  protected
-  procedure Paint; override;
   procedure SetDefault(const LDefault: Boolean);
-  procedure SetCaption(const LCaption: String);
   procedure SetDimensions;
   procedure SetModalResult(const LModalResult: TModalResult);
+  procedure SetNative(const LNative: Boolean);
+ public
+  procedure MouseDown(Button :TMouseButton; Shift :TShiftState; X, Y :Integer); override;
+  procedure MouseUp(Button :TMouseButton; Shift :TShiftState; X, Y :Integer); override;
+  procedure Paint; override;
+  destructor Destroy; override;
+  procedure Click; override;
  published
   //Methods
   constructor Create(AOwner: TComponent); override;
-  //Events
-  property OnClick    : TNotifyEvent read FOnClick     write FOnClick;
   //Properties
+  property OnMouseMove;
+  property OnMouseDown;
+  property OnMouseUp;
+  property OnMouseEnter;
+  property OnMouseLeave;
   property Default    : Boolean      read FDefault     write SetDefault     default False;
-  property Caption    : String       read FCaption     write SetCaption;
+  property NativeOS   : Boolean      read FNative      write SetNative      default False;
   property ModalResult: TModalResult read FModalResult write SetModalResult default mrNone;
- public
-  destructor Destroy; override;
-  procedure Click; override;
 end;
 
 //TColouredMemo class - declarations +++++++++++++++++++++++++++++++++++++++++++
@@ -452,8 +470,7 @@ begin
  FTicked   :=False;
  FColour   :=clNone;
  FOnlyMouse:=False;
-// Height:=Canvas.GetTextHeight(' ');
-// Width:=Height+Canvas.GetTextWidth(' ')+4;
+ FNative   :=False;
  //Create the on and off graphics
  FOn       :=TPortableNetworkGraphic.Create;
  FOff      :=TPortableNetworkGraphic.Create;
@@ -478,40 +495,43 @@ var
  R   : TRect=();
  Lcol: TColor=0;
 begin
- //Create a temporary graphic
- Lgf       :=TPortableNetworkGraphic.Create;
- //Set it's dimensions
- Lgf.Width :=FOn.Width;
- Lgf.Height:=FOn.Height;
- //Colour the background, if one has been specified
- if FColour=clNone then
+ if not FNative then
  begin
-  Canvas.Brush.Style:=bsClear;
-  Canvas.Pen.Style  :=psClear;
- end
- else
- begin
-  Canvas.Brush.Color:=FColour;
-  Canvas.Brush.Style:=bsSolid;
-  Canvas.Pen.Color  :=FColour;
-  Canvas.Pen.Style  :=psSolid;
-  Canvas.Rectangle(0,0,Width,Height);
+  //Create a temporary graphic
+  Lgf       :=TPortableNetworkGraphic.Create;
+  //Set it's dimensions
+  Lgf.Width :=FOn.Width;
+  Lgf.Height:=FOn.Height;
+  //Colour the background, if one has been specified
+  if FColour=clNone then
+  begin
+   Canvas.Brush.Style:=bsClear;
+   Canvas.Pen.Style  :=psClear;
+  end
+  else
+  begin
+   Canvas.Brush.Color:=FColour;
+   Canvas.Brush.Style:=bsSolid;
+   Canvas.Pen.Color  :=FColour;
+   Canvas.Pen.Style  :=psSolid;
+   Canvas.Rectangle(0,0,Width,Height);
+  end;
+  //Paint the appropriate graphic
+  if FTicked then Lgf.Assign(FOn) else Lgf.Assign(FOff);
+  //And paint it onto the control
+  R.Top   :=0;
+  R.Left  :=0;
+  R.Width :=Height;
+  R.Height:=Height;
+  Canvas.StretchDraw(R,Lgf);
+  Lgf.Free;
+  //Control enabled?
+  Lcol:=Canvas.Font.Color;
+  if not Enabled then Canvas.Font.Color:=$8E8E8E;
+  //Write the text
+  Canvas.TextOut(Height,(Height-Canvas.TextHeight(Caption))div 2,' '+Caption);
+  Canvas.Font.Color:=LCol;
  end;
- //Paint the appropriate graphic
- if FTicked then Lgf.Assign(FOn) else Lgf.Assign(FOff);
- //And paint it onto the control
- R.Top   :=0;
- R.Left  :=0;
- R.Width :=Height;
- R.Height:=Height;
- Canvas.StretchDraw(R,Lgf);
- Lgf.Free;
- //Control enabled?
- Lcol:=Canvas.Font.Color;
- if not Enabled then Canvas.Font.Color:=$8E8E8E;
- //Write the text
- Canvas.TextOut(Height,(Height-Canvas.TextHeight(Caption))div 2,' '+FCaption);
- Canvas.Font.Color:=LCol
 end;
 
 {-------------------------------------------------------------------------------
@@ -520,8 +540,7 @@ React to the click
 procedure TRISCOSTickBoxes.Click;
 begin
  if not FExclusive then FTicked:=not FTicked else FTicked:=True;
- Invalidate;//Force a redraw
- Update;
+ ForceRedraw;
  UnsetOthers;
  //Fire the OnChange event
  if Assigned(FOnChange) then FOnChange(Self as TObject);
@@ -561,12 +580,14 @@ end;
 {-------------------------------------------------------------------------------
 Caption has changed, so adjust the dimensions
 -------------------------------------------------------------------------------}
-procedure TRISCOSTickBoxes.SetWidth(const LCaption: String);
+procedure TRISCOSTickBoxes.SetCaption(const LCaption: String);
 var
  Ltext: String='';
 begin
- FCaption:=LCaption;
- Ltext   :=' '+FCaption;
+ inherited Caption:=LCaption;
+ if FNativeBox is TCheckBox then (FNativeBox as TCheckBox).Caption:=LCaption;
+ if FNativeBox is TRadioButton then (FNativeBox as TRadioButton).Caption:=LCaption;
+ Ltext   :=' '+Caption;
  Height  :=Canvas.TextHeight(Ltext);
  Width   :=Canvas.TextWidth(Ltext)+Height+4;
  Invalidate;//Force a redraw
@@ -574,17 +595,101 @@ begin
 end;
 
 {-------------------------------------------------------------------------------
+Get the caption
+-------------------------------------------------------------------------------}
+function TRISCOSTickBoxes.GetCaption: String;
+begin
+ Result:=inherited Caption;
+end;
+
+{-------------------------------------------------------------------------------
 The ticked state has been changed
 -------------------------------------------------------------------------------}
 procedure TRISCOSTickBoxes.SetTicked(const LTicked: Boolean);
 begin
+ if FNativeBox is TCheckBox then (FNativeBox as TCheckBox).Checked:=LTicked;
+ if FNativeBox is TRadioButton then (FNativeBox as TRadioButton).Checked:=LTicked;
  FTicked:=LTicked;
- Invalidate; //Force a redraw
- Update;
+ ForceRedraw;
  UnsetOthers;
  //Fire the OnChange event
  if not FOnlyMouse then //Unless we only reacting to a mouse click
   if Assigned(FOnChange) then FOnChange(Self as TObject);
+end;
+
+{-------------------------------------------------------------------------------
+Get the ticked state
+-------------------------------------------------------------------------------}
+function TRISCOSTickBoxes.GetTicked: Boolean;
+begin
+ Result:=FTicked;
+end;
+
+{-------------------------------------------------------------------------------
+Create a native OS tickbox
+-------------------------------------------------------------------------------}
+function TRISCOSTickBoxes.CreateTickBox(aOwner: TObject): TCheckBox;
+begin
+ Result:=TCheckBox.Create(AOwner as TComponent);
+ Result.Parent:=AOwner as TWinControl;
+ Result.Visible:=FNative;
+end;
+
+{-------------------------------------------------------------------------------
+Create a native OS radio box
+-------------------------------------------------------------------------------}
+function TRISCOSTickBoxes.CreateRadioBox(aOwner: TObject): TRadioButton;
+begin
+ Result:=TRadioButton.Create(AOwner as TComponent);
+ Result.Parent:=AOwner as TWinControl;
+ Result.Visible:=FNative;
+end;
+
+{-------------------------------------------------------------------------------
+Set the top co-ordinate of the control
+-------------------------------------------------------------------------------}
+procedure TRISCOSTickBoxes.SetTop(aValue: Integer);
+begin
+ if FNativeBox is TCheckBox then (FNativeBox as TCheckBox).Top:=aValue;
+ if FNativeBox is TRadioButton then (FNativeBox as TRadioButton).Top:=aValue;
+ inherited Top:=aValue;
+end;
+
+{-------------------------------------------------------------------------------
+Get the top co-ordinate of the control
+-------------------------------------------------------------------------------}
+function TRISCOSTickBoxes.GetTop: Integer;
+begin
+ Result:=inherited Top;
+end;
+
+{-------------------------------------------------------------------------------
+Set the left co-ordinate of the control
+-------------------------------------------------------------------------------}
+procedure TRISCOSTickBoxes.SetLeft(aValue: Integer);
+begin
+ if FNativeBox is TCheckBox then (FNativeBox as TCheckBox).Left:=aValue;
+ if FNativeBox is TRadioButton then (FNativeBox as TRadioButton).Left:=aValue;
+ inherited Left:=aValue;
+end;
+
+{-------------------------------------------------------------------------------
+Get the left co-ordinate of the control
+-------------------------------------------------------------------------------}
+function TRISCOSTickBoxes.GetLeft: Integer;
+begin
+ Result:=inherited Left;
+end;
+
+{-------------------------------------------------------------------------------
+Set whether the control is native OS or RISC OS styled
+-------------------------------------------------------------------------------}
+procedure TRISCOSTickBoxes.SetNative(aValue: Boolean);
+begin
+ if FNativeBox is TCheckBox then (FNativeBox as TCheckBox).Visible:=aValue;
+ if FNativeBox is TRadioButton then (FNativeBox as TRadioButton).Visible:=aValue;
+ FNative:=aValue;
+ ForceRedraw;
 end;
 
 //Tickbox Methods ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -608,6 +713,17 @@ begin
  Lms.Position:=0;
  FOff.LoadFromStream(Lms);
  Lms.Free;
+ //Create the native OS tick box
+ FNativeBox:=CreateTickBox(AOwner);
+ (FNativeBox as TCheckBox).OnClick:=@DoClick;
+end;
+
+{-------------------------------------------------------------------------------
+We need an OnClick event, locally
+-------------------------------------------------------------------------------}
+procedure TRISCOSTickBox.DoClick(Sender: TObject);
+begin
+ inherited Click;
 end;
 
 {-------------------------------------------------------------------------------
@@ -640,6 +756,17 @@ begin
  Lms.Position:=0;
  FOff.LoadFromStream(Lms);
  Lms.Free;
+ //Create the native OS radio box
+ FNativeBox:=CreateRadioBox(AOwner);
+ (FNativeBox as TRadioButton).OnClick:=@DoClick;
+end;
+
+{-------------------------------------------------------------------------------
+We need an OnClick event, locally
+-------------------------------------------------------------------------------}
+procedure TRISCOSRadioBox.DoClick(Sender: TObject);
+begin
+ inherited Click;
 end;
 
 {-------------------------------------------------------------------------------
@@ -685,10 +812,6 @@ begin
  Width       :=40;
  Height      :=300;
  FFaderSize  :=0;
- //We need to react to the MouseDown, MouseMove and MouseUp events
- OnMouseDown :=@FDown;
- OnMouseMove :=@FMove;
- OnMouseUp   :=@FUp;
 end;
 
 {-------------------------------------------------------------------------------
@@ -725,6 +848,7 @@ var
   Lpng.LoadFromStream(Lms);
  end;
 begin
+ inherited Paint;
  FFaderSize :=0;
  //Work out the position (centre of control)
  if FOrient=csVertical then
@@ -1221,19 +1345,20 @@ end;
 {-------------------------------------------------------------------------------
 React to the Mouse Down
 -------------------------------------------------------------------------------}
-procedure TRISCOSSlider.FDown(Sender: TObject; Button: TMouseButton;
- Shift: TShiftState; X, Y: Integer);
+procedure TRISCOSSlider.MouseDown(Button: TMouseButton; Shift: TShiftState;
+                            X, Y: Integer);
 begin
  //Set the flag
  FMouseIsDown:=True;
  //And adjust the slider
- FMove(Sender,Shift,X,Y);
+ MouseMove(Shift,X,Y);
+ inherited MouseDown(Button, Shift, X, Y);
 end;
 
 {-------------------------------------------------------------------------------
 React to the Mouse Move
 -------------------------------------------------------------------------------}
-procedure TRISCOSSlider.FMove(Sender: TObject; Shift: TShiftState; X,Y: Integer);
+procedure TRISCOSSlider.MouseMove(Shift: TShiftState; X,Y: Integer);
 var
  Lposition : Integer=0;
  LH        : Integer=0;
@@ -1256,16 +1381,17 @@ begin
    if Assigned(FOnChange) then FOnChange(Self as TObject);
   end;
  end;
+ inherited MouseMove(Shift, X, Y);
 end;
 
 {-------------------------------------------------------------------------------
 React to the Mouse Up
 -------------------------------------------------------------------------------}
-procedure TRISCOSSlider.FUp(Sender: TObject; Button: TMouseButton;
-Shift: TShiftState; X, Y: Integer);
+procedure TRISCOSSlider.MouseUp(Button: TMouseButton;Shift: TShiftState; X, Y: Integer);
 begin
  //Clear the flag
  FMouseIsDown:=False;
+ inherited MouseDown(Button, Shift, X, Y);
 end;
 
 {-------------------------------------------------------------------------------
@@ -1274,7 +1400,6 @@ Get the height of the slider, taking into account the text
 function TRISCOSSlider.GetSliderEnd: Integer;
 var
  LCaption : String='';
- LTY      : Integer=0;
 begin
  //Default, if there is nothing to print
  if FOrient=csVertical then
@@ -1367,13 +1492,11 @@ begin
  inherited Create(AOwner);
  //Set the default variables
  FDefault:=False;
- FCaption:='';
+ FNative :=False;
+// FCaption:='';
  FPushed :=False;
  SetDimensions;
  FModalResult:=mrNone;
- //We need to react to the MouseDown, MouseMove and MouseUp events
- OnMouseDown:=@FDown;
- OnMouseUp  :=@FUp;
 end;
 
 {-------------------------------------------------------------------------------
@@ -1394,89 +1517,93 @@ var
  LCol  : TColor=0;
  Lsize : Integer=0;
 begin
- //Border size, 2px scaled and to the nearest even number
- Lsize:=Round(ScreenInfo.PixelsPerInchX/96)<<1;
- //Draw the button
- Canvas.Brush.Style:=bsSolid;
- Canvas.Pen.Style  :=psClear;
- //Outer border, top and left
- if(not FDefault)and(not FPushed)then Canvas.Brush.Color:=$FFFFFF;//Normal button, not pushed
- if(FDefault)and(not Enabled)    then Canvas.Brush.Color:=$BBBBBB;//Default button, disabled
- if((FDefault)and(Enabled))                                       //Default button, enabled
- or((not FDefault)and(Enabled)and(FPushed))then                   //and normal button, pushed, enabled
-  Canvas.Brush.Color:=$777777;
- Canvas.Rectangle(0,0,Width,Lsize);
- Canvas.Rectangle(0,0,Lsize,Height);
- //Outer border, bottom and right 
- if(not FDefault)and(not FPushed)and(Enabled)then                 //Normal button, not pushed, enabled
-  Canvas.Brush.Color:=$777777;
- if(FDefault)                                                     //Default button
- or((not FDefault)and(Enabled)and(FPushed))then                   //and normal button, pushed, enabled
-  Canvas.Brush.Color:=$FFFFFF;
- if(not FDefault)and(not Enabled)then Canvas.Brush.Color:=$BBBBBB;//Normal button, disabled
- Canvas.Rectangle(Width-Lsize      ,Lsize             ,Width      ,Height);
- Canvas.Rectangle(Width-Lsize div 2,Lsize div 2       ,Width      ,Lsize);
- Canvas.Rectangle(Lsize div 2      ,Height-Lsize      ,Width      ,Height);
- Canvas.Rectangle(0                ,Height-Lsize div 2,Lsize div 2,Height);
- //Button surface (normal) and gap between inside and outside borders (default)
- if(FDefault)    then Canvas.Brush.Color:=$BBEEEE;
- if(not FDefault)then Canvas.Brush.Color:=$DDDDDD;
- Canvas.Rectangle(Lsize,Lsize,Width-Lsize,Height-Lsize);
- //Default button, inside
- if(FDefault)and(not FPushed)then
+ if not FNative then
  begin
-  //Top and left inside border
-  Canvas.Brush.Color:=$FFFFFF;
-  Canvas.Rectangle(Lsize*2,Lsize*2,Width-Lsize*2,Lsize*3);
-  Canvas.Rectangle(Lsize*2,Lsize*2,Lsize*3      ,Height-Lsize*2);
-  //Bottom and right inside border
-  if Enabled then Canvas.Brush.Color:=$777777 else Canvas.Brush.Color:=$BBBBBB;
-  Canvas.Rectangle(Width-Lsize*3            ,Lsize*3                   ,Width-Lsize*2      ,Height-Lsize*2);
-  Canvas.Rectangle(Width-Lsize*2-Lsize div 2,Lsize*2+Lsize div 2       ,Width-Lsize*2      ,Lsize*3);
-  Canvas.Rectangle(Lsize*2+Lsize div 2      ,Height-Lsize*3            ,Width-Lsize*3      ,Height-Lsize*2);
-  Canvas.Rectangle(Lsize*2                  ,Height-Lsize*2-Lsize div 2,Lsize*2+Lsize div 2,Height-Lsize*2);
-  //Button surface
-  Canvas.Brush.Color:=$DDDDDD;
-  Canvas.Rectangle(Lsize*3,Lsize*3,Width-Lsize*3,Height-Lsize*3);
- end;
- //Write the text
- if FCaption<>'' then
- begin
-  //Remember the current colour
-  LCol:=Canvas.Font.Color;
-  //Change if disabled
-  if not Enabled then Canvas.Font.Color:=$8E8E8E;
-  //Find the centred position
-  LX:=(Width -Canvas.GetTextWidth( FCaption))div 2;
-  LY:=(Height-Canvas.GetTextHeight(FCaption))div 2;
-  //Write with transparent background
-  Canvas.Brush.Style:=bsClear;
-  Canvas.TextOut(LX,LY,FCaption);
-  //Change the colour back
-  Canvas.Font.Color:=LCol;
- end;
+  //Border size, 2px scaled and to the nearest even number
+  Lsize:=Round(ScreenInfo.PixelsPerInchX/96)<<1;
+  //Draw the button
+  Canvas.Brush.Style:=bsSolid;
+  Canvas.Pen.Style  :=psClear;
+  //Outer border, top and left
+  if(not FDefault)and(not FPushed)then Canvas.Brush.Color:=$FFFFFF;//Normal button, not pushed
+  if(FDefault)and(not Enabled)    then Canvas.Brush.Color:=$BBBBBB;//Default button, disabled
+  if((FDefault)and(Enabled))                                       //Default button, enabled
+  or((not FDefault)and(Enabled)and(FPushed))then                   //and normal button, pushed, enabled
+   Canvas.Brush.Color:=$777777;
+  Canvas.Rectangle(0,0,Width,Lsize);
+  Canvas.Rectangle(0,0,Lsize,Height);
+  //Outer border, bottom and right
+  if(not FDefault)and(not FPushed)and(Enabled)then                 //Normal button, not pushed, enabled
+   Canvas.Brush.Color:=$777777;
+  if(FDefault)                                                     //Default button
+  or((not FDefault)and(Enabled)and(FPushed))then                   //and normal button, pushed, enabled
+   Canvas.Brush.Color:=$FFFFFF;
+  if(not FDefault)and(not Enabled)then Canvas.Brush.Color:=$BBBBBB;//Normal button, disabled
+  Canvas.Rectangle(Width-Lsize      ,Lsize             ,Width      ,Height);
+  Canvas.Rectangle(Width-Lsize div 2,Lsize div 2       ,Width      ,Lsize);
+  Canvas.Rectangle(Lsize div 2      ,Height-Lsize      ,Width      ,Height);
+  Canvas.Rectangle(0                ,Height-Lsize div 2,Lsize div 2,Height);
+  //Button surface (normal) and gap between inside and outside borders (default)
+  if(FDefault)    then Canvas.Brush.Color:=$BBEEEE;
+  if(not FDefault)then Canvas.Brush.Color:=$DDDDDD;
+  Canvas.Rectangle(Lsize,Lsize,Width-Lsize,Height-Lsize);
+  //Default button, inside
+  if(FDefault)and(not FPushed)then
+  begin
+   //Top and left inside border
+   Canvas.Brush.Color:=$FFFFFF;
+   Canvas.Rectangle(Lsize*2,Lsize*2,Width-Lsize*2,Lsize*3);
+   Canvas.Rectangle(Lsize*2,Lsize*2,Lsize*3      ,Height-Lsize*2);
+   //Bottom and right inside border
+   if Enabled then Canvas.Brush.Color:=$777777 else Canvas.Brush.Color:=$BBBBBB;
+   Canvas.Rectangle(Width-Lsize*3            ,Lsize*3                   ,Width-Lsize*2      ,Height-Lsize*2);
+   Canvas.Rectangle(Width-Lsize*2-Lsize div 2,Lsize*2+Lsize div 2       ,Width-Lsize*2      ,Lsize*3);
+   Canvas.Rectangle(Lsize*2+Lsize div 2      ,Height-Lsize*3            ,Width-Lsize*3      ,Height-Lsize*2);
+   Canvas.Rectangle(Lsize*2                  ,Height-Lsize*2-Lsize div 2,Lsize*2+Lsize div 2,Height-Lsize*2);
+   //Button surface
+   Canvas.Brush.Color:=$DDDDDD;
+   Canvas.Rectangle(Lsize*3,Lsize*3,Width-Lsize*3,Height-Lsize*3);
+  end;
+  //Write the text
+  if Caption<>'' then
+  begin
+   //Remember the current colour
+   LCol:=Canvas.Font.Color;
+   //Change if disabled
+   if not Enabled then Canvas.Font.Color:=$8E8E8E;
+   //Find the centred position
+   LX:=(Width -Canvas.GetTextWidth( Caption))div 2;
+   LY:=(Height-Canvas.GetTextHeight(Caption))div 2;
+   //Write with transparent background
+   Canvas.Brush.Style:=bsClear;
+   Canvas.TextOut(LX,LY,Caption);
+   //Change the colour back
+   Canvas.Font.Color:=LCol;
+  end;
+ end
+ else inherited Paint;
 end;
 
 {-------------------------------------------------------------------------------
 React to the mouse down
 -------------------------------------------------------------------------------}
-procedure TRISCOSButton.FDown(Sender: TObject; Button: TMouseButton;
-                            Shift: TShiftState; X, Y: Integer);
+procedure TRISCOSButton.MouseDown(Button: TMouseButton;Shift: TShiftState; X, Y: Integer);
 begin
  FPushed:=True;
  Invalidate;
  Update;
+ inherited MouseDown(Button, Shift, X, Y);
 end;
 
 {-------------------------------------------------------------------------------
 React to the mouse up
 -------------------------------------------------------------------------------}
-procedure TRISCOSButton.FUp(Sender: TObject; Button: TMouseButton;
-                            Shift: TShiftState; X, Y: Integer);
+procedure TRISCOSButton.MouseUp(Button: TMouseButton;Shift: TShiftState; X, Y: Integer);
 begin
  FPushed:=False;
  Invalidate;
  Update;
+ inherited MouseUp(Button, Shift, X, Y);
 end;
 
 {-------------------------------------------------------------------------------
@@ -1484,18 +1611,11 @@ The click procedure
 -------------------------------------------------------------------------------}
 procedure TRISCOSButton.Click;
 var
- Lctrl: TCustomForm=nil;
+ Lform: TCustomForm=nil;
 begin
- if Assigned(FOnClick) then FOnClick(Self as TObject);
- if ModalResult<>mrNone then
- begin
-  Lctrl:=GetParentForm(Self);
-  if Lctrl<>nil then
-  begin
-   Lctrl.ModalResult:=FModalResult;
-   Lctrl.Hide;
-  end;
- end;
+ Lform:=GetParentForm(Self);
+ if Lform<>nil then Lform.ModalResult:=FModalResult;
+ inherited Click;
 end;
 
 {-------------------------------------------------------------------------------
@@ -1510,24 +1630,14 @@ begin
 end;
 
 {-------------------------------------------------------------------------------
-The caption has changed
--------------------------------------------------------------------------------}
-procedure TRISCOSButton.SetCaption(const LCaption: String);
-begin
- FCaption:=LCaption;
- Invalidate;
- Update;
-end;
-
-{-------------------------------------------------------------------------------
 Set the dimensions
 -------------------------------------------------------------------------------}
 procedure TRISCOSButton.SetDimensions;
 var
  w,h: Integer;
 begin
- if FDefault then w:=92 else w:=84; //Width
- if FDefault then h:=34 else h:=26; //Height
+ if(FDefault)and(not FNative)then w:=92 else w:=84; //Width
+ if(FDefault)and(not FNative)then h:=34 else h:=26; //Height
  Width :=Round(w*(ScreenInfo.PixelsPerInchX/96)); //Set width, scaled
  Height:=Round(h*(ScreenInfo.PixelsPerInchX/96)); //Set height, scaled
 end;
@@ -1536,8 +1646,29 @@ end;
 The modal result has changed
 -------------------------------------------------------------------------------}
 procedure TRISCOSButton.SetModalResult(const LModalResult: TModalResult);
+var
+ Lform: TCustomForm=nil;
 begin
  FModalResult:=LModalResult;
+ Lform:=GetParentForm(Self);
+ if Lform<>nil then
+ begin
+  Lform.CancelControl :=nil;
+  Lform.DefaultControl:=nil;
+  if FModalResult=mrOK     then Lform.DefaultControl:=Self;
+  if FModalResult=mrCancel then Lform.CancelControl:=Self;
+ end;
+end;
+
+{-------------------------------------------------------------------------------
+User has changed the look of the button
+-------------------------------------------------------------------------------}
+procedure TRISCOSButton.SetNative(const LNative: Boolean);
+begin
+ FNative:=LNative;
+ SetDimensions;
+ Invalidate;
+ Update;
 end;
 
 //ColouredMemo Methods +++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -9,6 +9,7 @@ object MainForm: TMainForm
   ClientHeight = 414
   ClientWidth = 510
   Position = poScreenCenter
+  LCLVersion = '4.0.0.4'
   OnActivate = FormActivate
   OnDeactivate = FormDeactivate
   OnPaint = FormPaint
@@ -225,5 +226,12 @@ object MainForm: TMainForm
     Stretch = True
     Transparent = True
     Visible = False
+  end
+  object SpeedButton1: TSpeedButton
+    Left = 271
+    Height = 22
+    Top = 362
+    Width = 91
+    Caption = 'OK'
   end
 end

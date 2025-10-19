@@ -17,12 +17,12 @@ uses
   Background: TImage;
   Texture: TImage;
   ColourMix: TShape;
+  SpeedButton1: TSpeedButton;
   procedure CheckBox1Change(Sender: TObject);
   procedure FormActivate(Sender: TObject);
   procedure FormDeactivate(Sender: TObject);
   procedure FormPaint(Sender: TObject);
   procedure FormShow(Sender: TObject);
-  procedure Image2Click(Sender: TObject);
   procedure Panel1Click(Sender: TObject);
   procedure Panel1Paint(Sender:TObject);
   procedure TileCanvas(c: TCanvas);
@@ -41,6 +41,8 @@ uses
   NormalBtn   : TRISCOSButton;  
   DefaultBtn1 : TRISCOSButton;
   NormalBtn1  : TRISCOSButton;
+  NativeOSBtn1: TRISCOSButton;
+  NativeOSBtn2: TRISCOSButton;
  end;
 
 var
@@ -64,15 +66,17 @@ begin
  TickBox1.Left:=Round(10*(PixelsPerInch/DesignTimePPI));
  TickBox1.Name:='ROTickbox';
  TickBox1.OnChange:=@CheckBox1Change;
+ TickBox1.NativeOS:=False;
  //RISC OS style tick box
  TickBox2:=TRISCOSTickBox.Create(MainForm as TControl);
  TickBox2.Parent:=MainForm as TWinControl;
  TickBox2.Visible:=True;
- TickBox2.Caption:='Display values in dec';
+ TickBox2.Caption:='Another Tick Box';
  TickBox2.Top:=Round(10*(PixelsPerInch/DesignTimePPI));
  TickBox2.Left:=TickBox1.Left+TickBox1.Width;
  TickBox2.Name:='ROTickbox2';
-// TickBox2.OnChange:=@CheckBox1Change;
+ TickBox2.Ticked:=True;
+ TickBox2.NativeOS:=False;
  //Move the colour box
  ColourMix.Top:=TickBox1.Top+TickBox1.Height+Round(4*(PixelsPerInch/DesignTimePPI));
  //Sliders - Red
@@ -198,7 +202,7 @@ begin
  RadioBox3.Top:=RadioBox2.Top+RadioBox2.Height;
  RadioBox3.Left:=HSlider.Left;
  RadioBox3.Name:='RORadioBox3';
- //
+ // Buttons
  DefaultBtn:=TRISCOSButton.Create(MainForm as TControl);
  DefaultBtn.Parent:=MainForm as TWinControl;
  DefaultBtn.Visible:=True;
@@ -207,6 +211,7 @@ begin
  DefaultBtn.Top:=RadioBox3.Top+RadioBox3.Height+Round(4*(PixelsPerInch/DesignTimePPI));
  DefaultBtn.Left:=RadioBox3.Left;
  DefaultBtn.OnClick:=@Panel1Click;
+ DefaultBtn.ModalResult:=mrOK;
  //
  NormalBtn:=TRISCOSButton.Create(MainForm as TControl);
  NormalBtn.Parent:=MainForm as TWinControl;
@@ -215,8 +220,9 @@ begin
  NormalBtn.Caption:='Cancel';
  NormalBtn.Top:=DefaultBtn.Top+Round(4*(PixelsPerInch/DesignTimePPI));
  NormalBtn.Left:=DefaultBtn.Left+DefaultBtn.Width+Round(8*(PixelsPerInch/DesignTimePPI));
- NormalBtn.OnClick:=@Image2Click;
- //
+ NormalBtn.OnClick:=@Panel1Click;
+ NormalBtn.ModalResult:=mrCancel;
+ // Disabled buttons
  DefaultBtn1:=TRISCOSButton.Create(MainForm as TControl);
  DefaultBtn1.Parent:=MainForm as TWinControl;
  DefaultBtn1.Visible:=True;
@@ -225,6 +231,8 @@ begin
  DefaultBtn1.Top:=DefaultBtn.Top+DefaultBtn.Height+Round(4*(PixelsPerInch/DesignTimePPI));
  DefaultBtn1.Left:=RadioBox3.Left;
  DefaultBtn1.Enabled:=False;
+ DefaultBtn1.OnClick:=@Panel1Click;
+ DefaultBtn1.ModalResult:=mrOK;
  //
  NormalBtn1:=TRISCOSButton.Create(MainForm as TControl);
  NormalBtn1.Parent:=MainForm as TWinControl;
@@ -234,20 +242,50 @@ begin
  NormalBtn1.Top:=DefaultBtn1.Top+Round(4*(PixelsPerInch/DesignTimePPI));
  NormalBtn1.Left:=DefaultBtn1.Left+DefaultBtn1.Width+Round(8*(PixelsPerInch/DesignTimePPI));
  NormalBtn1.Enabled:=False;
+ NormalBtn1.OnClick:=@Panel1Click;
+ NormalBtn1.ModalResult:=mrCancel;
+ // Native OS Buttons
+ NativeOSBtn1:=TRISCOSButton.Create(MainForm as TControl);
+ NativeOSBtn1.Parent:=MainForm as TWinControl;
+ NativeOSBtn1.Visible:=True;
+ NativeOSBtn1.Default:=True;
+ NativeOSBtn1.Caption:='OK';
+ NativeOSBtn1.Top:=DefaultBtn1.Top+DefaultBtn1.Height+Round(4*(PixelsPerInch/DesignTimePPI));
+ NativeOSBtn1.Left:=RadioBox3.Left;
+ NativeOSBtn1.OnClick:=@Panel1Click;
+ NativeOSBtn1.ModalResult:=mrOK;
+ NativeOSBtn1.NativeOS:=True;
  //
+ NativeOSBtn2:=TRISCOSButton.Create(MainForm as TControl);
+ NativeOSBtn2.Parent:=MainForm as TWinControl;
+ NativeOSBtn2.Visible:=True;
+ NativeOSBtn2.Default:=False;
+ NativeOSBtn2.Caption:='Cancel';
+ NativeOSBtn2.Top:=NativeOSBtn1.Top;
+ NativeOSBtn2.Left:=NativeOSBtn1.Left+NativeOSBtn1.Width+Round(8*(PixelsPerInch/DesignTimePPI));
+ NativeOSBtn2.OnClick:=@Panel1Click;
+ NativeOSBtn2.ModalResult:=mrCancel;
+ NativeOSBtn2.NativeOS:=True;
+ // Just for comparison
+ SpeedButton1.Top:=NativeOSBtn1.Top+NativeOSBtn1.Height+Round(4*(PixelsPerInch/DesignTimePPI));
+ SpeedButton1.Left:=NativeOSBtn1.Left;
+ SpeedButton1.OnClick:=@Panel1Click;
+ // Finish up
  CheckBox1Change(nil);
  Application.OnActivate:=@FormActivate;
  Application.OnDeactivate:=@FormDeActivate;
 end;
 
-procedure TMainForm.Image2Click(Sender: TObject);
-begin
- //Caption:='Cancel Clicked';
-end;
-
 procedure TMainForm.Panel1Click(Sender: TObject);
 begin
- //Caption:='OK Clicked';
+ if Sender is TRISCOSButton then
+ begin
+  Caption:='RISC OS Button '+(Sender as TRISCOSButton).Caption+' Clicked';
+  if (Sender as TRISCOSButton).ModalResult=mrOK     then Caption:=Caption+' mrOK';
+  if (Sender as TRISCOSButton).ModalResult=mrCancel then Caption:=Caption+' mrCancel';
+ end;
+ if Sender is TSpeedButton then
+  Caption:='Speed Button '  +(Sender as TSpeedButton).Caption +' Clicked';
 end;
 
 procedure TMainForm.Panel1Paint(Sender:TObject);
@@ -271,7 +309,6 @@ begin
  ColourMix.Brush.Color:=BlueSlider.Position<<16
                        +GreenSlider.Position<<8
                        +RedSlider.Position;
- TickBox2.Ticked:=not TickBox1.Ticked;
 end;
 
 procedure TMainForm.FormActivate(Sender: TObject);

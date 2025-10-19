@@ -4,7 +4,7 @@
     <Version Value="12"/>
     <ManyBuildModesSelection Value="Windows"/>
     <BuildModes Active="Default"/>
-    <Units Count="20">
+    <Units Count="13">
       <Unit0>
         <Filename Value="GJHComponents.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -19,9 +19,8 @@
         <ComponentName Value="MainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <IsVisibleTab Value="True"/>
-        <TopLine Value="146"/>
-        <CursorPos X="29" Y="171"/>
+        <TopLine Value="56"/>
+        <CursorPos X="24" Y="78"/>
         <UsageCount Value="215"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -40,250 +39,202 @@
       <Unit3>
         <Filename Value="GJHCustomComponents.pas"/>
         <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
         <TopLine Value="141"/>
-        <CursorPos Y="161"/>
+        <CursorPos X="25" Y="163"/>
         <UsageCount Value="207"/>
         <Loaded Value="True"/>
       </Unit3>
       <Unit4>
-        <Filename Value="ColouredMemo/ColouredMemo.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="437"/>
-        <CursorPos X="8" Y="484"/>
-        <UsageCount Value="3"/>
-      </Unit4>
-      <Unit5>
-        <Filename Value="../Old and Test Projects/MacOSPreferences/Unit1.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="89"/>
-        <CursorPos X="40" Y="45"/>
-        <UsageCount Value="4"/>
-      </Unit5>
-      <Unit6>
-        <Filename Value="../../../../../../fpcupdeluxe/fpcsrc/rtl/objpas/math.pp"/>
-        <UnitName Value="Math"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="384"/>
-        <CursorPos X="10" Y="407"/>
-        <UsageCount Value="3"/>
-      </Unit6>
-      <Unit7>
-        <Filename Value="../../../../../../fpcupdeluxe/fpcsrc/packages/univint/src/fp.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="586"/>
-        <CursorPos X="10" Y="780"/>
-        <UsageCount Value="3"/>
-      </Unit7>
-      <Unit8>
-        <Filename Value="../../../../../../fpcupdeluxe/fpcsrc/packages/univint/src/CFPreferences.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="222"/>
-        <CursorPos X="10" Y="240"/>
-        <UsageCount Value="4"/>
-      </Unit8>
-      <Unit9>
-        <Filename Value="../../../../../../fpcupdeluxe/fpcsrc/packages/univint/src/CFBase.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="556"/>
-        <CursorPos X="9" Y="415"/>
-        <UsageCount Value="4"/>
-      </Unit9>
-      <Unit10>
-        <Filename Value="/Applications/Lazarus/lcl/controls.pp"/>
-        <UnitName Value="Controls"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="1151"/>
-        <CursorPos X="3" Y="1175"/>
-        <UsageCount Value="4"/>
-      </Unit10>
-      <Unit11>
-        <Filename Value="/usr/local/share/fpcsrc/rtl/objpas/classes/classesh.inc"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="107"/>
-        <CursorPos X="3" Y="118"/>
-        <UsageCount Value="4"/>
-      </Unit11>
-      <Unit12>
-        <Filename Value="/Applications/Lazarus/lcl/buttons.pp"/>
-        <UnitName Value="Buttons"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="144"/>
-        <CursorPos X="19" Y="42"/>
-        <UsageCount Value="4"/>
-      </Unit12>
-      <Unit13>
-        <Filename Value="/Applications/Lazarus/lcl/stdctrls.pp"/>
-        <UnitName Value="StdCtrls"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="1168"/>
-        <CursorPos X="3" Y="1176"/>
-        <UsageCount Value="4"/>
-      </Unit13>
-      <Unit14>
-        <Filename Value="/Applications/Lazarus/lcl/lclclasses.pp"/>
-        <UnitName Value="LCLClasses"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="3" Y="45"/>
-        <UsageCount Value="4"/>
-      </Unit14>
-      <Unit15>
-        <Filename Value="PointerGraphics.pas"/>
-        <EditorIndex Value="-1"/>
-        <UsageCount Value="4"/>
-      </Unit15>
-      <Unit16>
         <Filename Value="FaderGraphics.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="738"/>
         <CursorPos X="42" Y="908"/>
-        <UsageCount Value="29"/>
-      </Unit16>
-      <Unit17>
+        <UsageCount Value="23"/>
+      </Unit4>
+      <Unit5>
         <Filename Value="../Standalone Units/Console and GUI App.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="5"/>
-        <UsageCount Value="9"/>
-      </Unit17>
-      <Unit18>
+        <UsageCount Value="3"/>
+      </Unit5>
+      <Unit6>
         <Filename Value="../Old and Test Projects/BreakDownInf/unit1.pas"/>
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit1"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="9"/>
-      </Unit18>
-      <Unit19>
+        <UsageCount Value="3"/>
+      </Unit6>
+      <Unit7>
         <Filename Value="../Old and Test Projects/JSON Parser/Unit1.pas"/>
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="51"/>
-        <UsageCount Value="9"/>
-      </Unit19>
+        <UsageCount Value="3"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="Resources/Corba.pas"/>
+        <UnitName Value="Unit1"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="30" Y="97"/>
+        <UsageCount Value="8"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="Resources/CustomTrackBar.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="3"/>
+        <CursorPos Y="25"/>
+        <UsageCount Value="6"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="../../../../../../Lazarus 4/lcl/controls.pp"/>
+        <UnitName Value="Controls"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1247"/>
+        <CursorPos X="3" Y="1188"/>
+        <UsageCount Value="6"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="../../../../../../Lazarus 4/lcl/include/control.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2945"/>
+        <CursorPos Y="2976"/>
+        <UsageCount Value="8"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="../../../../../../Lazarus 4/lcl/interfaces/cocoa/cocoawindows.pas"/>
+        <UnitName Value="CocoaWindows"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1007"/>
+        <CursorPos Y="1031"/>
+        <UsageCount Value="10"/>
+      </Unit12>
     </Units>
-    <JumpHistory Count="30" HistoryIndex="26">
+    <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1600" Column="58" TopLine="1560"/>
+        <Caret Line="610" Column="3" TopLine="599"/>
       </Position1>
       <Position2>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1606" Column="58" TopLine="1566"/>
+        <Caret Line="615" Column="58" TopLine="599"/>
       </Position2>
       <Position3>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1612" Column="58" TopLine="1572"/>
+        <Caret Line="101" Column="13" TopLine="77"/>
       </Position3>
       <Position4>
-        <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1898" Column="12" TopLine="1858"/>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="312" Column="3" TopLine="286"/>
       </Position4>
       <Position5>
-        <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1907" Column="12" TopLine="1867"/>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="25" Column="18"/>
       </Position5>
       <Position6>
-        <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="488" Column="14" TopLine="462"/>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="312" Column="20" TopLine="289"/>
       </Position6>
       <Position7>
-        <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="245" Column="45" TopLine="211"/>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="314" Column="32" TopLine="291"/>
       </Position7>
       <Position8>
-        <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="158" Column="8" TopLine="134"/>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="315" Column="33" TopLine="292"/>
       </Position8>
       <Position9>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="245" Column="48" TopLine="207"/>
+        <Caret Line="614" TopLine="600"/>
       </Position9>
       <Position10>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="166" Column="16" TopLine="157"/>
+        <Caret Line="608" TopLine="600"/>
       </Position10>
       <Position11>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="990" Column="51" TopLine="981"/>
+        <Caret Line="606" Column="14" TopLine="595"/>
       </Position11>
       <Position12>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="185" Column="18" TopLine="143"/>
+        <Caret Line="101" Column="17" TopLine="101"/>
       </Position12>
       <Position13>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1343" Column="25" TopLine="1311"/>
+        <Caret Line="609" TopLine="600"/>
       </Position13>
       <Position14>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="77" Column="15" TopLine="46"/>
+        <Caret Line="614" TopLine="600"/>
       </Position14>
       <Position15>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1337" Column="5" TopLine="1335"/>
+        <Caret Line="608" TopLine="600"/>
       </Position15>
       <Position16>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="196" Column="19" TopLine="183"/>
+        <Caret Line="609" TopLine="600"/>
       </Position16>
       <Position17>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1360" Column="42" TopLine="1339"/>
+        <Caret Line="610" Column="19" TopLine="600"/>
       </Position17>
       <Position18>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1361" Column="45" TopLine="1338"/>
+        <Caret Line="614" TopLine="600"/>
       </Position18>
       <Position19>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="208" Column="15" TopLine="175"/>
+        <Caret Line="612" TopLine="600"/>
       </Position19>
       <Position20>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="955" Column="35" TopLine="748"/>
+        <Caret Line="653" Column="24" TopLine="617"/>
       </Position20>
       <Position21>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="196" Column="18" TopLine="188"/>
+        <Caret Line="97" Column="21" TopLine="79"/>
       </Position21>
       <Position22>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1258" Column="20" TopLine="1236"/>
+        <Caret Line="632" Column="24" TopLine="608"/>
       </Position22>
       <Position23>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1260" TopLine="1236"/>
+        <Caret Line="826" Column="31" TopLine="697"/>
       </Position23>
       <Position24>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="207" Column="14" TopLine="179"/>
+        <Caret Line="107" Column="19" TopLine="79"/>
       </Position24>
       <Position25>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="766" Column="65" TopLine="761"/>
+        <Caret Line="687" Column="2" TopLine="682"/>
       </Position25>
       <Position26>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1219" Column="25" TopLine="1203"/>
+        <Caret Line="134" Column="20" TopLine="104"/>
       </Position26>
       <Position27>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="161" Column="3" TopLine="142"/>
+        <Caret Line="702" Column="2" TopLine="695"/>
       </Position27>
       <Position28>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="687" Column="3" TopLine="666"/>
+        <Caret Line="115" Column="18" TopLine="111"/>
       </Position28>
       <Position29>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="728" Column="2" TopLine="708"/>
+        <Caret Line="466" Column="2" TopLine="460"/>
       </Position29>
       <Position30>
         <Filename Value="GJHCustomComponents.pas"/>
-        <Caret Line="1248" Column="22" TopLine="1227"/>
+        <Caret Line="257" Column="65" TopLine="239"/>
       </Position30>
     </JumpHistory>
     <RunParams>
@@ -291,20 +242,4 @@
       <Modes ActiveMode=""/>
     </RunParams>
   </ProjectSession>
-  <Debugging>
-    <Watches>
-      <Item>
-        <Expression Value="LH"/>
-      </Item>
-      <Item>
-        <Expression Value="LY"/>
-      </Item>
-      <Item>
-        <Expression Value="Y"/>
-      </Item>
-      <Item>
-        <Expression Value="FFaderSize"/>
-      </Item>
-    </Watches>
-  </Debugging>
 </CONFIG>
