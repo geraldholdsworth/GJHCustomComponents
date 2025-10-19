@@ -3,7 +3,7 @@ A set of custom components and classes for Lazarus:<br>
 <UL>
 <LI>TGJHTickBox : RISC OS style tick box</LI>
 <LI>TGJHRadioBox : RISC OS style radio (option) box</LI>
-<LI>TGJHSlider : Coloured slider with title and value</LI>
+<LI>TGJHSlider : Coloured slider with title and value, or as a fader</LI>
 <LI>TGJHButton : RISC OS style buttons</LI>
 <LI>TGJHRegistry : Wrapper around the TRegistry class</LI>
  </UL>
