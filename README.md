@@ -26,7 +26,7 @@ Background colour. Default: clNone.<br>
 <B><I>Group</I></B>: Integer<br>
 (RadioBox only) Allows controls to be grouped together, and have several different groups of radio controls with the same parent.<br>
 <B><I>NativeOS</I></B>: Boolean<br>
-Native OS or RISC OS styling. Default: False.<br><br>
+Native OS or RISC OS styling. Default: False.<br>
 <B><I>OnlyMouse</I></B>: Boolean<br>
 Only fire the OnChange event when clicked on. Default: False.<br>
 <B><I>Ticked</I></B>: Boolean<br>
